@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Exlude
+**/lambda/**
+References/
+MarketGAN/
+Simulations/
+CGAN/
+abides-jpmc-public/lambda/*

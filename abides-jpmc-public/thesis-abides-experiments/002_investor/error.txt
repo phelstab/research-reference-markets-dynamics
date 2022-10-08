@@ -1,0 +1,58 @@
+Failure # 1 (occurred at 2022-09-27_23-26-02)
+Traceback (most recent call last):
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/tune/execution/ray_trial_executor.py", line 989, in get_next_executor_event
+    future_result = ray.get(ready_future)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/_private/client_mode_hook.py", line 105, in wrapper
+    return func(*args, **kwargs)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/_private/worker.py", line 2277, in get
+    raise value
+ray.exceptions.RayActorError: The actor died because of an error raised in its creation task, [36mray::DQN.__init__()[39m (pid=14615, ip=172.20.131.179, repr=DQN)
+KeyError: 'markets-investor-v0'
+
+During handling of the above exception, another exception occurred:
+
+[36mray::DQN.__init__()[39m (pid=14615, ip=172.20.131.179, repr=DQN)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/env/utils.py", line 50, in _gym_env_creator
+    return gym.make(env_descriptor, **env_context)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/gym/envs/registration.py", line 145, in make
+    return registry.make(id, **kwargs)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/gym/envs/registration.py", line 89, in make
+    spec = self.spec(path)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/gym/envs/registration.py", line 131, in spec
+    raise error.UnregisteredEnv('No registered env with id: {}'.format(id))
+gym.error.UnregisteredEnv: No registered env with id: markets-investor-v0
+
+During handling of the above exception, another exception occurred:
+
+[36mray::DQN.__init__()[39m (pid=14615, ip=172.20.131.179, repr=DQN)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/algorithms/algorithm.py", line 308, in __init__
+    super().__init__(config=config, logger_creator=logger_creator, **kwargs)
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/tune/trainable/trainable.py", line 157, in __init__
+    self.setup(copy.deepcopy(self.config))
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/algorithms/algorithm.py", line 425, in setup
+    logdir=self.logdir,
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/evaluation/worker_set.py", line 179, in __init__
+    spaces=spaces,
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/evaluation/worker_set.py", line 701, in _make_worker
+    disable_env_checking=config["disable_env_checking"],
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/evaluation/rollout_worker.py", line 490, in __init__
+    self.env = env_creator(copy.deepcopy(self.env_context))
+  File "/root/Thesis/abides-jpmc-public/lambda/lib/python3.7/site-packages/ray/rllib/env/utils.py", line 52, in _gym_env_creator
+    raise EnvError(ERR_MSG_INVALID_ENV_DESCRIPTOR.format(env_descriptor))
+ray.rllib.utils.error.EnvError: The env string you provided ('markets-investor-v0') is:
+a) Not a supported/installed environment.
+b) Not a tune-registered environment creator.
+c) Not a valid env class string.
+
+Try one of the following:
+a) For Atari support: `pip install gym[atari] autorom[accept-rom-license]`.
+   For VizDoom support: Install VizDoom
+   (https://github.com/mwydmuch/ViZDoom/blob/master/doc/Building.md) and
+   `pip install vizdoomgym`.
+   For PyBullet support: `pip install pybullet`.
+b) To register your custom env, do `from ray import tune;
+   tune.register('[name]', lambda cfg: [return env obj from here using cfg])`.
+   Then in your config, do `config['env'] = [name]`.
+c) Make sure you provide a fully qualified classpath, e.g.:
+   `ray.rllib.examples.env.repeat_after_me_env.RepeatAfterMeEnv`
+
