@@ -1,0 +1,5 @@
+https://github.com/wiseodd/generative-models/tree/master/GAN/conditional_gan
+
+
+How to build a GAN
+https://www.youtube.com/watch?v=AALBGpLbj6Q
