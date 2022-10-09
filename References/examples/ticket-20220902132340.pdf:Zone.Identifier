@@ -1,3 +1,0 @@
-[ZoneTransfer]
-ZoneId=3
-HostUrl=https://s3.us-west-2.amazonaws.com/secure.notion-static.com/f9874a5d-f333-4629-bc0c-0fecd5533d45/ticket-20220902132340.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20220908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220908T093554Z&X-Amz-Expires=86400&X-Amz-Signature=fbdc39143ff4897256b83b79cfcc5abddbd92848b0cef0897c63a3df87652912&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%20%3D%22ticket-20220902132340.pdf%22&x-id=GetObject
