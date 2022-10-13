@@ -31,7 +31,8 @@ logger = logging.getLogger(__name__)
 
 
 class AdaptiveMarketMakerAgent(TradingAgent):
-    """This class implements a modification of the Chakraborty-Kearns `ladder` market-making strategy, wherein the
+    """
+    This class implements a modification of the Chakraborty-Kearns `ladder` market-making strategy, wherein the
     the size of order placed at each level is set as a fraction of measured transacted volume in the previous time
     period.
 
