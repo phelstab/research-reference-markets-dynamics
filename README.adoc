@@ -1,0 +1,6653 @@
+:toc: preamble
+:doctype: book
+:encoding: utf-16
+:lang: de
+:toclevels: 2
+:icons: font
+:hardbreaks:
+:nofooter:
+:imagesdir: images/
+:html:
+
+:dev:
+:ops:
+
+:toc-title:
+
+= ABIDES
+
+Beschreibung::
+Das BMA Backend enthält das gesamte Backend in einzelnen Kontexten. Dadurch können zur Kommunikation
+zwischen den Komponenten Events statt TCP/IP-Commands verwendet werden.Der BMA Master ist zuständig für nachfolgend genannte Aufgaben%§%§
+1. Initial soll der Buchungsmaster Buchungsinformationen von Bloomberg entgegennehmen und über den XBM gegen Xitaro (ATR) verbuchen.
+2. XDD-Transaktionen von BSAG.XDDTransaction empfangen und mit den Buchungsinformationen vergleichen.
+3. Weiterleiten der Buchungsinformationen an dem BMA Frontend.
+4. Speicherung von Statusübergängen und allen relevanten Daten für empfangenen Buchungsinformationen in einer Datenbank.
+5. Steuerung und Verwaltung der Datenbankkommunikation.
+6. Empfang und Verarbeitung der Kommandos von BMA Frontend.
+7. Sicherstellen von verlustfreiem Wiederanlauf im Fehlerfall.
+8. Protokollierung über Log4Net Framework mit definierten Logmeldungen.
+9. Verarbeitung der Devisenkurs und doppelte Verbuchungen.
+10. Meldung der MIFID Geschäfte über den APAReporting in APA Service.
+11. RestCall für die Erstellung der Reports. 
+12. Erstellung der ARM, Settlement Instruction (SI), Trade Confirmation (TC) und XWT reports.
+13. Buchungsprüfung (BP) der EKS-Geschäften.
+14. Meldung der Cash(DFX)- und Depot(DWP)-Buchungen an DECIDE.
+15. Speicherung der Reportinformation (TBMX und AxeTrader) über den Ausgang "TRD-R Generischer Logger".
+16. Bereitstellung des Interbank Trade Report (ITR) Ausgangs für die Verbuchung in Xitaro.Der Prozess Verarbeitet die Xitaro Nachrichten und stellt fest anhand von einer XDD-Transaktion wann eine Order oder ein Geschäft in Xitaro Verbucht wurde.
+Der XDDTransaction ist zuständig für nachfolgend genannte Aufgaben%§%§
+1. Xitaro Nachrichten von XF-Distributoren empfangen und Umwandlung der Nachrichten in XDD-Transaktionen.
+2. Weiterleiten der XDD-Transaktionen an dem BMA Master.
+3. Sicherstellen von verlustfreiem Wiederanlauf im Fehlerfall.
+4. Protokollierung über Log4Net Framework mit definierten Logmeldungen.
+
+
+== V2.17.3.2589 vom 03.02.2022 - Olga Castro
+
+Änderungsbeschreibung::
+Korrektur bei BestV: Buchung der Tickets der konfigurierten ClassIds mit falscher Valuta.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|45388
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|TradingHolidays_BMA Datei und Pfad aus Produktion
+
+|QLP DB Version
+|Ab Version 2.19.8 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.1.0
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+ abcDLL 2.2.10.0
+master.dll - 2.2.10.0 - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.17.2.2585 vom 01.02.2022 - Olga Castro
+
+Änderungsbeschreibung::
+- Kein Xetra Fatal Error wenn keine Zielsystem gefunden wurde.
+- Bei Xitaro ATR Transaktionen wird nicht mehr geprüft ob der Zeitstempel des Geschäfts 
+vor dem BMA Start liegt.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|45351
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix / Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja (Wegen Version 2.17.1)
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Version 2.17.1 (Konfigurationsänderung)
+
+|QLP DB Version
+|Ab Version 2.19.8 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.1.0
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.17.1.2584 vom 31.01.2022 - Olga Castro
+
+Änderungsbeschreibung::
+Festvaluta Erweiterung für Instrumente mit konfigurierten CLASS_IDs und Zielsystem Xitaro AufgabeTradeReport (ATR).
+- Manuell vom Händler definierte Valuten werden wie bisher im ATR in Xitaro gebucht werden.
+(Keine Festvaluta Anpassung)
+- Transaktionen für Instrumente der konfigurierten CLASS_IDs werden eine Festvaluta von T+X festgelegt.
+Die CLASS_IDs und die X Valuta Tage werden aus der Konfiguration (ValutaClassIds) gelesen.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|45328
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|Neue Parameter 'ValutaClassIds' und 'TradingHolidayFilePath'
+
+|QLP DB Version
+|Ab Version 2.19.8 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.1.0
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.17.0.2522 vom 28.10.2021 - Olga Castro, Gilles Yopa
+
+Änderungsbeschreibung::
+[42526] Neuer Ausgang NIX für XETRA und TBMX
+Plugin XETRA -> NIX
+[43874] Plugin TBMX -> NIX
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|42526, 43874
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Version 2.16.0.2513
+
+|QLP DB Version
+|Ab Version 2.19.8 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.1.0
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.16.0.2513 vom 21.10.2021 - Olga Castro
+
+Änderungsbeschreibung::
+[42340] Transaktionsplattform Geschäfte: Neuer Quellsystem 'TPF'
+ARM Plugin: Speicherung der Geschäfte in der ARM Report Datei.
+ATR Plugin: Verbuchung in Xitaro über XBM Schnittstelle
+[42341] Zielsystem Xitaro Interbank Trade Report (ITR)
+EKSC -> ITR Plugin
+BestV -> ITR Plugin
+Filtererweiterung: Neue Optionen "QLP-KVNR" und "Ziel-Broker-Name" für das BMA-FE (IFilterableBookingInformationOperators)
+Filter Umbenennung: KVNR in DepositaryBankId
+[42835] Löschung der JOR Schnittstelle.
+[42892] Umbenennung Zielsystem Xitaro in ATR (Aufgabe Trade Report)
+[43340] BestV Depotumbuchung
+Bei einem Händlerticket (BestV) mit Zielsystem DWP werden automatisch zwei Transaktionen generiert:
+(Eine für das Source-Depot 'SourceDepBankIdName' und die andere für das Target-Depot 'TargetDepBankIdName')
+Zourdnung der Tag 54 (Side) Info für Source und Target Geschäfte.
+[43695] Erweiterung BMA-REST Lookup Anfrage um ISIN. 
+Lookup Response: MarketCode wurde als Rückgabe-Parameter entfernt. 
+MarketCode wurde für das Zielsystem SI verwendet. SI wird in einer späteren Version gelöscht.
+[43696] Verarbeitungsstopp bei negativen Nominalen
+Die Verarbeitung wird unterbrochen und das Geschäft bleibt bei den offenen Buchungen mit einer entsprechenden Fehlermeldung. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|42340, 42341, 42835, 42892, 43340, 43695, 43696
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+Side Anpassung: Tag 54 beim 'FixDwpParameters' Mapping
+Anmerkung BestVConnector: 
+Wenn beim BMA Rollout, die Bestandsverwaltung die neue Schnittstelle noch nicht implementiert hat,
+soll der Parameter 'ConfigurationSectionName' mit dem Wert 'BestVMappingOld' belegt sein. 
+Andernfalls soll der Parameter mit dem Wert 'BestVMapping' belegt sein. 
+
+ifdef::ops[]
+|Bemerkung
+|- TPF Konnektor + Skript 'V2.19.8.0_BMA_TPF.zip'
+- JOR wird nicht mehr verwendet + Skript 'V2.19.8.0_BMA_JOR_DELETE.zip'.
+- Umbenennung Xitaro in ATR + Skript 'V2.19.8.0_BMA_XITARO_ATR_RENAME.zip'
+- Rollout Abhängigkeit: Bestandsverwaltung mit der neuer Schnittstelle für die Depotumbuchung
+(Siehe Anmerkung BestVConnector)
+
+|QLP DB Version
+|Ab Version 2.19.8 (+ Skripte 'V2.19.8.0_BMA_JOR_DELETE.zip', 'V2.19.8.0_BMA_TPF.zip' und 'V2.19.8.0_BMA_XITARO_ATR_RENAME.zip')
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.1.0
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.15.1.2439 vom 18.08.2021 - Olga Castro
+
+Änderungsbeschreibung::
+- Aktualisierung der FIX Spezifikation
+[43163] Überprüfung der Lookup Antwort nach einer manuellen Short Sell Flag Bearbeitung.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|43163
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Änderungen in der Version 2.15.0.2324
+- FIX Spezifikation (FIX50SP2-EP237-BMA.xml) wie in Produktion
+(Änderung bei den FIXCashService und FixDWPService Konnektoren)
+
+|QLP DB Version
+|Ab Version 2.19.8 (+ Skript für XFIX 'V2.19.8.0_BMA_XFIX.zip')
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.15.0.2324 vom 13.05.2021 - Olga Castro
+
+Änderungsbeschreibung::
+- Aus Produktion: Konfiguration Anpassung bei den "FixCashParameters": Tag 30
+- Korrekte Bearbeitung der TC-Dateien im Re-Start Fall (Filename Pattern)
+[36025] Xitaro Substitute Trader Geschäfte: Neuer Quellsystem 'XFIX'
+XWT Plugin: Speicherung der Geschäfte in der XWT Report Datei.
+[41426] Axe Trader Erweiterung: Xitaro Plugin.
+[41443] Manuelles Short Sell Flag für ARM bei AxeTrader.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|36025, 41426, 41443
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- XFIX Konnektor + Skript 'V2.19.8.0_BMA_XFIX.zip'
+- Tag 30 (FixCashParameters Mapping) wurde in Produktion nach HO Anforderung schon aktualisiert (Ticket [20210310-0134])
+- Aktualisierung der Namen der InQueue und MaxList Konnektor-Parameters 
+
+|QLP DB Version
+|Ab Version 2.19.8 (+ Skript für XFIX 'V2.19.8.0_BMA_XFIX.zip')
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.14.5.2178 vom 14.01.2021 - Olga Castro
+
+Änderungsbeschreibung::
+- Match-Algo Anpassung bei EKS Geschäften: Wenn parallelen Geschäften für anderen Systemen (z.B Tradegate) 
+bei XBM (Xitaro) aktiv sind.
+- Aus Produktion: Konfiguration Anpassung beim "DFX Cash Settlement Isin Mapping": Währungen GBP, RUB und TRY
+- Anhebung auf .Net 4.7.2 und CSF 3.3.4.0.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20210104-0150]/39640
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Devisenmapping Anpassung für GBP, RUB und TRY
+
+ifdef::ops[]
+|Bemerkung
+|- Das Devisenmapping wurde in Produktion nach HO Anforderung schon aktualisiert (Ticket [20210113-0102])
+- Parameter "BookingTimeTolerance" wie in Produktion aktualisiert.
+- In Produktion sollte der Parameter "ReceiveInterval" wie in der CAB Datei konfiguriert sein.
+<ReceiveInterval>30000</ReceiveInterval>
+
+|QLP DB Version
+|Ab Version 2.19.5
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.7.2
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.3.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.9.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.14.4.2160 vom 17.12.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Zuordnung der SourceSystemIdentifier = SourceApplication bei EKS Geschäften, wenn keinen Match-Parameter gefunden wurde.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20201216-0072]/39594
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Version 2.14.0.2053 (conf Anpassung)
+
+|QLP DB Version
+|Ab Version 2.19.5
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.14.3.2106 vom 13.11.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Verbesserung Xitaro Match Prozess: Keine Unterbrechung (Xitaro Match Überholer)
+Match-Prozess weiterführen, wenn das Zielsystem = BP und XBM in Bearbeitung ist.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20201027-0206]/39154
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Version 2.14.0.2053 (conf Anpassung)
+
+|QLP DB Version
+|Ab Version 2.19.5
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.14.2.2101 vom 10.11.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Korrektur beim Xetra Lazy-Start: Die gelesene Xetra-Geschäfte aus der Datenbank nach einem Re-Start,
+werden für die spätere Validierung intern gespeichert (Info wird protokolliert)
+- ParameterService: Eine negative Antwort wird an FE gesendet, wenn der Benutzer nicht berechtigt ist. 
+(Wird in einer zukünftigen BMA-FE Version verwendet)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20201008-0174]/38891
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Version 2.14.0.2053 (conf Anpassung)
+
+|QLP DB Version
+|Ab Version 2.19.5
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.14.1.2059 vom 05.10.2020 - Olga Castro
+
+Änderungsbeschreibung::
+Xitaro Match Korrektur nach XBM Response Timeout.
+- Erweiterung der XbmService Request-Nachricht um die BMA Id.
+- Notifikation beim Timeout und Bearbeitung der Nachrichten nach einem XBM Timeout.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20200925-0176]/38386
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Version 2.14.0.2053 
+
+|QLP DB Version
+|Ab Version 2.19.5
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.14.0.2053 vom 21.09.2020 - Olga Castro
+
+Änderungsbeschreibung::
+[36032] Umstellung APA auf LOOKUP
+[38303] Erweiterung TBMX um PlugIn APA
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|36032, 38303
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Änderung beim Parameter "NotAllowedApaTargetSystems" 
+
+|QLP DB Version
+|Ab Version 2.19.5
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.13.1.1977 vom 09.07.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Valuta Validierung für das Zielsystem TRD-R.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|36729
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Wert-Apassung bei <Parameter key="BookingTimeTolerance">BP=1000</Parameter>
+- Siehe Version 2.13.0
+
+|QLP DB Version
+|Ab Version 2.19.5 mit View [BMA].[VW_STD_LISTING_STR]
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.13.0.1970 vom 01.07.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Speicherung der Reportinformation über den Ausgang "TRD-R Generischer Logger".
+- Die Quell-Systeme für das Report sind TBMX und AxeTrader Geschäfte.
+- Die gespeicherten Daten dienen als Basis für die Generierung eines Trade Reports.
+(Report-Generierung ist kein Bestandteil des BMA-Backends)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|36018
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- TRD-R Genericher Logger Konnektor
+- Siehe auch Bemerkungen in der Version 2.12.1
+
+|QLP DB Version
+|Ab Version 2.19.5 mit View [BMA].[VW_STD_LISTING_STR]
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.12.1.1927 vom 08.05.2020 - Olga Castro
+
+Änderungsbeschreibung::
+[34348] Xetra Konnektor wird gestartet wenn allen Geschäften des Tages aus der Datenbank gelesen wurden.
+[34350] Buchungszeit Toleranz pro Zielsystem (Xitaro und/oder BP) eingebaut: 
+Die Toleranz-Zeit wird zu der Buchungszeit addiert.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20200506-0036]/34348, 34350
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix / Change
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Neuer Parameter: <Parameter key="BookingTimeTolerance">BP=100</Parameter>
+- Connector [JORBookingConnector]: <AutoReconnect> und <MaxRetries> Parameters
+- Connector [XetraBookingConnector]: <AutoReconnect> Parameter
+- Connector [ProxyXBM]: <AutoReconnect> Parameter
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.12.0.1904 vom 22.04.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Erweiterung der FrontendBooking Schnittstellen: Abfrage den aktuellen Status den offenen Buchungen. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|30556
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|-/- 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.11.1871 vom 16.03.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Diese zwischen Status Aktualisierungen werde NICHT an BMA-Frontend gesendet:
+WorkflowStarted, BookingTypeInspected, AutoBooking, Booking, Transfering.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|32747
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.10.1864 vom 05.03.2020 - Olga Castro
+
+Änderungsbeschreibung::
+- Überprüfung der Start-Events vor das Lesen der ARM-Transaktionen
+- In der Datei 'bma-InputTrades.log' werden die Status-Änderungen nur in DEBUG Modus geschrieben. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20200211-0088]/32418
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.9.1770 vom 14.01.2020 - Olga Castro
+
+Änderungsbeschreibung::
+[30806] Überprüfung des Status nach dem "Cancel buchen" Befehl eingebaut.
+[29820] Doppelwährungsanleihen: ARM und XWT Anpassung für Bloomberg
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20200108-0060]/30806, 29820
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix /Change
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.8.1758 vom 01.01.2020 - Olga Castro
+
+Änderungsbeschreibung::
+Probleme mit dem Xitaro-Nachrichten-Abgleich bei EKS-BP Geschäften mit identischen Werten behoben.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20191223-0056]/30495
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.7.1755 vom 19.12.2019 - Olga Castro
+
+Änderungsbeschreibung::
+Triggerung des Xitaro-Nachrichten-Abgleichs nach einem XBM-Timeout eingebaut.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20191216-0352]/30140
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.6.1702 vom 09.12.2019 - Olga Castro
+
+Änderungsbeschreibung::
+XWT-Datei: Reference für BXSWiss aus dem Feld TVTIC.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|29749
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.5.1662 vom 26.11.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[29178] Überprüfung für die Xitaro-Match Überholer eingebaut.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20191113-0056]/29178
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Solange die Bestandsverwaltung Backend mit der neuen BMA-Schnittstelle nicht produktiv ist, 
+muss die aktuelle produktive “BMA.Backend.Communicator.exe.config” aktiv bleiben. 
+Die gelieferte “BMA.Backend.Communicator.exe.config” Konfiguration muss zusammen mit der neuen Bestandsverwaltung Backend aktiviert werden. 
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.4.1620 vom 30.10.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[26858] Erweiterung: Tag 30
+[27924] Aussteuerung Datensätze bei fehlenden Feldern
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|26858, 27924
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- FIX Depotbuchungen: Tag 30
+- Siehe auch Version 2.11.3.1607
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.3.1607 vom 22.10.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[26858] Erweiterung: Übermittlung der BestV Depotbuchungen über RDP-Trade an DECIDE 
+[27440] Anpassung bei der FixCashParameters: Tag 32
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|26858, 27440
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Neue FIX Depotbuchungen Konnektor und FixDwpParameters
+- Fix Cash-Konnektor und FixCashParameters
+- conf/spec Verzeichnis (Fix Spezifikationen)
+- NotAllowedDfx und NotAllowedDwp Parameters
+- RestServiceUrl-Parameter Anpasssung
+- Löschung der XwtParameters: XWT Parameters fuer die Bestimmung der Lagerstelle fuer das Feldes 17 - Counterparty
+- dontValidateXmlTags
+- TC 'SettlementDepot' Parameter in 'TcSettlementDepot' Parameter umbenannt. (Achtung: Nicht vergessen!)
+- Neue log4Net FixMessages/FixEvent Appender
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.2.1577 vom 10.10.2019 - Olga Castro
+
+Änderungsbeschreibung::
+Anpassung bei der FixCashParameters: Tag 30 als Konstant = "DECOTC"
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|27161
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- FIXCashService Port = 12348
+- Siehe Version 2.11.1
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.1.1572 vom 07.10.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[24020] FIX-Tags Konfiguration Anpassungen
+Neue CashSettlMappings Parameters
+[20190913-0098]/[20190911-0118] XitaroComparer: Zusätzliche Validierung des Match-Key eingebaut.
+[25653] Anpassung Bestimmung SSI-Kürzel für XWT-Report
+Anpassung bei der Lookup Abfrage (Siehe Konfigurationsparamater RestServiceUrl)
+Löschung der XWT Parameters fuer die Bestimmung der Lagerstelle fuer das Feldes 17 - Counterparty
+[26839] Das Feld Counterparty wird aus dem RestCall Feld "counterpartyKuerzel" für die TC-Reports zugeordnet.
+SettlementDepot Parameter in TcSettlementDepot Parameter umbenannt.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|24020, 25653, [20190913-0098], [20190911-0118], 26839
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Neue CashSettlMappings Parameters
+- RestServiceUrl-Parameter Anpasssung
+- Siehe Version 2.11.0.1546
+- Löschung der XwtParameters: XWT Parameters fuer die Bestimmung der Lagerstelle fuer das Feldes 17 - Counterparty
+- dontValidateXmlTags
+- TC 'SettlementDepot' Parameter in 'TcSettlementDepot' Parameter umbenannt.
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.11.0.1546 vom 20.09.2019 - Olga Castro/Gilles Yopa
+
+Änderungsbeschreibung::
+- [24020/24021] DFX Erweiterung: Übermittlung der Cash Buchungen über RDP-Trade an DECIDE
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|24020, 24021
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- conf/spec Verzeichnis (Fix Spezifikationen)
+- Fix Cash Mapping Parameters
+- Neue log4Net FixMessages/FixEvent Appender
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0  - BS.CSF.QuickFIX: 1.0.8.0
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.10.4.1527 vom 17.09.2019 - Olga Castro
+
+Änderungsbeschreibung::
+- [20190913-0098]/[20190911-0118] Korrektur bei der Tradegate Xitaro Verbuchung
+- [25593] Anpassung SI-File (Neues Format) bei Fremdwährungen.
+Betroffene Spalten: SettlementAmount, GrossAmount und AccruedInterest.
+- XWT-Report: Verbesserung bei der Verfügbarkeit des Service
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20190913-0098], [20190911-0118], 25593 
+
+ifdef::ops[]
+|Änderungsart
+|Hotfix 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja (TcFileName aus Produktion)
+
+ifdef::ops[]
+|Bemerkung
+|-/-
+
+|QLP DB Version
+|Ab Version 2.19 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.10.3.1441 vom 22.08.2019 - Olga Castro
+
+Änderungsbeschreibung::
+Bearbeitung der Parameter-Validierung bei vohandenen RestCall Responses
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|25316 
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Bemerkungen in der Version 2.10.1.1424
+
+|QLP DB Version
+|Ab Version 2.19 + Skript für TROY Löschung (V2.19.0.0_BMA_TROY_DELETE.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.10.2.1437 vom 20.08.2019 - Olga Castro
+
+Änderungsbeschreibung::
+Anpassung der XWT-Parameter für die Bestimmung der Lagerstelle (XWT-Datei Feld 17) 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|25316 
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Bemerkungen in der Version 2.10.1.1424
+
+|QLP DB Version
+|Ab Version 2.19 + Skript für TROY Löschung (V2.19.0.0_BMA_TROY_DELETE.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.10.1.1424 vom 12.08.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[23948] Schnittstellenerweiterung um SSI-Information aus RestCall für Counterparty-XWT.
+Ausbauen der TBMX Konfigurationsparameter "ReportParameters" für ARM, SI und XWT.
+[24017] Umstellung auf RestCall für die Eingangsquellen Bloomberg, MarketAxess, TBMX, AxeTrader und Tradegate.
+Löschung der TROY-Schnittstelle
+[20190731-0200] Korrekte Verwaltung des Timers für die Erstellung der Old-Format SI-Datei (Aus PROD Version 2.9.3)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|23948, 24017, [20190731-0200] 
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Neue XwtParameters
+- Löschung des SchwedenVenue Parameter
+ - Löschung der ReportParameters
+- Löschung der TROY-Schnittstelle und TP_EKS_Troy.xml
+- Aktualisierung der "NotAllowed..." Parameter wegen TROY Löschung.
+
+|QLP DB Version
+|Ab Version 2.19(+ Skript für TROY Löschung)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.10.0.1342 vom 18.07.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[20421] Neue Schnittstelle für die XWT Datei (Siehe BMA_XWT_Schnittstellenspezifikation.docx)
+Erweiterung der Parameter Filtereinschränkungen um das Feld "Venue"
+[23015] Der Parameter 'Manuell' darf bei dem Zielsystem 'ARM' gesetzt werden.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|20421, 23015 
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Siehe auch Bemerkungen in der Version 2.9.1.901
+
+|QLP DB Version
+|Ab Version 2.15.10 (+ Skripten für AxeTrader und EKS)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.9.3.1404 vom 01.08.2019 - Olga Castro
+
+Änderungsbeschreibung::
+Korrekte Verwaltung des Timers für die Erstellung der Old-Format SI-Datei.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|20190731-0200
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja (Konfiguration aus Prod mit kleinen Anpassungen)
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Bemerkungen in der Version 2.9.1.901
+
+|QLP DB Version
+|Ab Version 2.19
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.9.2.1012 vom 08.03.2019 - Olga Castro
+
+Änderungsbeschreibung::
+SI File-Erweiterung: Neues Feld "Trade Identifier" (Siehe BMA_SettlementInstruktion_Schnittstellenspezifikation.docx)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|16519
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Siehe Bemerkungen in der Version 2.9.1.901
+
+|QLP DB Version
+|Ab Version 2.15.10 (+ Skript V2.16.0.0_BMA_AxeT.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.9.1.901 vom 04.02.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[14180] Automatische Verarbeitung von AxeTrader Trades
+[15827] Überarbeitung SI-file-Format 
+Duplizierung der SI Datei. Es werden zwei SI Datei generiert. 
+Die Parameter für SI Datei mit alten Anforderungen (Format und Felder) können gelöscht werden. In diesem Fall
+wird diese SI Datei nicht generiert.
+[15998] Erweiterung Market Code Identifizierung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|14180, 15827, 15998 
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|1. View VW_STD_INSTITUTION_KVNR muss vorhanden sein (+ Skript V2.14.2.0_BMA_EKS.zip).
+2. Wenn die Troy Geschäfte über die neue EKS Schnittstelle gesendet werden, 
+ soll die Troy Schnittstelle auskommentiert werden. Somit können doppelte Verbuchungen verhindert werden.
+3. Konfigurationsanpassungen:
+ - NotAllowed Parameter Aktualisierung.
+ - Neue SI Parameter für die Duplizierung der Dateien. 
+- Xitaro MiFID II PartyGroup Parameter sind nicht mehr bei dem XBM Konnector vorhanden, 
+ sondern in den allgemeinen Kontext-Parameter.
+
+|QLP DB Version
+|Ab Version 2.15.10 (+ Skript V2.16.0.0_BMA_AxeT.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.9.0.850 vom 15.01.2019 - Olga Castro
+
+Änderungsbeschreibung::
+[14180] Automatische Verarbeitung von AxeTrader Trades.
+[14364] Parameterverwaltung Validierung: 
+Der Parameter "Eigengeschäft" darf gescheckt werden wenn "Xitaro" oder "ARM" als Zielsysteme ausgewählt wurden.
+[14545] EKS-Schnittstelle: Löschung des Feldes "ShortSellInd" 
+[14945] TBMX Behandlung der Short Sell Indicator 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|14180, 14364, 14545, 14945
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|View VW_STD_INSTITUTION_KVNR muss vorhanden sein.
+Konfigurationsanpassungen:
+- Neuer AxeTrader-Konnektor
+
+|QLP DB Version
+|Ab Version 2.15.10 (+ Skript V2.16.0.0_BMA_AxeT.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.8.0.797 vom 29.11.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[13045] Automatische Verarbeitung von EKS-Distributor Trades.
+[13536] Prüfung der manuellen Valutaeingabe vor Verbuchung in Xitaro.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|13045, 13536
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Konfigurationsanpassungen:
+- Neuer EKS-Konnektor
+- Tradegate und TBMX <AutoReconnect>true</AutoReconnect>
+- SiFileName Format.
+
+|QLP DB Version
+|Ab Version 2.15.10 
++ Skript V2.14.2.0_BMA_EKS.zip
++ View-Skript Create_VW_STD_INSTITUTION_KVNR.sql
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.7.2.767 vom 14.11.2018 - Olga Castro/Gilles Yopa
+
+Änderungsbeschreibung::
+[13236] TBMX Lookup-Abfrage wenn die Konfigurationsparameter nicht vollständig sind
+[11550] 1.„Settlement Amount“ -> 2 Nachkommastellen ohne überflüßige nullen in den Dezimalstellen
+ 2.Andere Spalten -> Dezimalstellen ohne zusätzlichen Nullen.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|13236,11550
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Konfigurationsanpassungen:
+- Tradegate und TBMX: Heartbeat Modus 
+
+|QLP DB Version
+|Ab Version 2.13.0 (+ Skript V2.13.0.0_BMA_TBMX.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.7.1.741 vom 05.11.2018 - Olga Castro, Gilles Yopa
+
+Änderungsbeschreibung::
+- Implementierung der BMA-REST Lookup-Service Abfrage.
+- XbmService: Qualifizierung der XBM-Proxy Fehlermeldung "String reference not set to an instance"
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|10036, 11361, 13016
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Konfigurationsanpassungen:
+- BMA-REST Lookup Service Parameter
+- <Parameter key="MonitorHeight">620</Parameter>
+
+|QLP DB Version
+|Ab Version 2.13.0 (+ Skript V2.13.0.0_BMA_TBMX.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.7.0.658 vom 25.09.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[10037] Erweiterung für Liquidity Provision TBMX
+SI Report: Nullen nach dem Komma (Dezimalstellen) werden abgeschnitten.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|10037
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- DB Anmerkung: Das Quellsystem 'TBMX' muss in der Tabelle BMA.TB_CTR_SOURCE_TARGET_PAIRS vorhanden sein.
+- Die TBMX Konfigurationsparameter für ARM und SI Reports müssen vor dem TBMX-Start vorhanden sein.
+In der CAB 'BMA.Backend.xml' Datei ist nur eine Beispielkonfiguration vorhanden.
+
+|QLP DB Version
+|Ab Version 2.13.0 (+ Skript V2.13.0.0_BMA_TBMX.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.6.0.609 vom 04.09.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[8713] Ausbau MarketAxess Backup.
+ [8690] Anpassung SI-file-Name.
+[8716] Automatische Verarbeitung von Tradegate Trades.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|8713, 8690, 8716
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Settlement Instruktion Parameter und NotAllowed Listen wurden aktualisiert 
+- Log4Net Aktualisierung: Appender InputTradesAppender 
+- DB Anmerkung: Das Quellsystem 'Tradegate' muss in der Tabelle BMA.TB_CTR_SOURCE_TARGET_PAIRS vorhanden sein.
+
+|QLP DB Version
+|Ab Version 2.13.0 (+ Skript V2.13.0.0_BMA_Tradegate.zip)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.5.0.570 vom 08.08.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[8316] Automatische Verbuchung bei fehlendem Devisenkurs.
+ [8319] Automatische Verbuchung bei abweichender Valuta.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|8316, 8319
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf, tp (Aktualiserung TP_XBM.xml)
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Neuer Parameter: <Parameter key="ValutaDatCod">FZ</Parameter>
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.6.553 vom 24.07.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[6891] Datensätze, bei denen keinen Parametersatz gefunden wurde, werden im BMA-FE mit der Fehlermeldung "Keinen Parametersatz gefunden" angezeigt.
+ Die Bearbeitung des Datensatzes kann manuell angestoßen werden, nach dem der notwendige Parameterdatensatz gepflegt wurde.
+ [7565] Matching manuelle Buchungen
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|6891, 7565
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.5.475 vom 28.06.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[6173] Wenn die QuotationCurrency in der Parameter "NotForeignCurrencyListed" vorhanden ist und die SettlementCurrency "EUR" ist, 
+ wird die Xitaro Verbuchung ohne Devisenkurs durchgeführt.
+[6346] Wenn die Nominale negativ ist, wird das Geschäft nicht automatisch in Xitaro verbucht. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|6173, 6346
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja (Neuer Parameter "NotForeignCurrencyListed")
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.4.451 vom 20.06.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[5651] Erweiterung des BMA- APA Response Protokoll 
+[1086] Allen Geschäften mit ZielSystem Xitaro wird nach einer positive Antwort vom XBM ("AutoBooked") 
+ der Status ("Booked") zugeordnet.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|5651, 1086
+
+ifdef::ops[]
+|Änderungsart
+|Change und Bugfix 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.3.420 vom 15.06.2018 - Olga Castro
+
+Änderungsbeschreibung::
+Keine Valuta Validierung bei den Settlement Instruktion (SI) und Trade Confirmations (TC) Reports 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|5647
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.2.396 vom 05.06.2018 - Olga Castro
+
+Änderungsbeschreibung::
+Settlement Instruktion Datei: 
+ - Neue Defaultwerte für das Feld „Broker fees“ (blank)
+ - Wenn „Accrued interest“ = „0“, dann die Spalten „Accrued interst“ und „Accrued days“ blank lassen. 
+ - Wenn „Accrued days“ = „0“, dann die Spalten „Accrued interst“ und „Accrued days“ blank lassen. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|5258
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.1.332 vom 23.05.2018 - Olga Castro
+
+Änderungsbeschreibung::
+- Erweiterung der Settlement Instruktion Schnittstelle um das Feld ExecutionPlace
+- Neue Defaultwerte für die Settlement Instruktion Felder „Accrued interest“, „Accrued days“ und „FX rate“ 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|4656, 4657
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.4.0.298 vom 10.05.2018 - Olga Castro
+
+Änderungsbeschreibung::
+- Neue Schnittstelle für die Trade Confirmations Dateien für Bloomberg
+- Bloomberg und Market Axess Schnittstelle Erweiterung um das Feld Zinstage (AccrIntrDays)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|3299, 3300
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf, data/TC_Template (Template Verzeichnis für TC Dateien)
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|Template Datei "OTC_Trade_Confirmations_Template.xlsx" muss wie in CAB Datei vorhanden sein.
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.3.0.266 vom 25.04.2018 - Olga Castro
+
+Änderungsbeschreibung::
+- Neue Schnittstelle für die Settlement Instruktion Dateien für Bloomberg und Market Axess
+- Anpassung: ARM Defaultwert Trading Capacity ist 'D'
+ - Anpassung bei dem Händlerticket Enter Single Trade Mapping (Siehe QLP_GK_BMA.doc)
+- CSF Aktualisierung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|2674, 2823, 2679, 2678 
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.7.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.2.0.180 vom 20.03.2018 - Olga Castro
+
+Änderungsbeschreibung::
+Händlerticketverbuchung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|1949, 1951
+
+ifdef::ops[]
+|Änderungsart
+|- Change 
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11.2
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.1.0.140 vom 23.02.2018 - Olga Castro
+
+Änderungsbeschreibung::
+MarketAxess Anbindung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|1077,1078,1079,1082
+
+ifdef::ops[]
+|Änderungsart
+|- Change 
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.11
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.0.4.4486 vom 01.02.2018 - Olga Castro
+
+Änderungsbeschreibung::
+Die Handels- und Abwicklungswährungen werden validiert. 
+Wenn diese beiden Währungen gleich sind und mit den Geschäftswerten (QuotationCurrency und SettlementCurrency) übereinstimmen, 
+dann wird das Geschäft im betroffenen Zielsystem (Xitaro) ohne Devisenkurs verbucht. 
+Wenn die Handels- und Abwicklungswährungen abweichen, dann wird ein Devisenkurs im Geschäft erwartet.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|21099
+
+ifdef::ops[]
+|Änderungsart
+|- Change (Multi-Currency)
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja (log4net Console layout conversionPattern)
+
+ifdef::ops[]
+|Bemerkung
+|Da die Xetra Geschäfte in der Multi-Currency Umgebung nicht verbucht werden, muss entweder der Xetra-Konnentor in der MC Umgebung auskommentiert, 
+oder der Xetra-Distributor durch einen TCP-Monitor ersetzt werden.
+
+|QLP DB Version
+|Ab Version 2.10.1
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.0.3.4433 vom 11.01.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[20996] Apa-Schnittelle Anpassung (Alle Preise und Nominale werden mit "." als Decimal Separator formatiert)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|20996
+
+ifdef::ops[]
+|Änderungsart
+|- Change (MiFID II)
+
+|Änderungsumfang
+|bin, conf , tp
+endif::[]
+
+|Konfigurationsänderungen
+|Nein 
+
+ifdef::ops[]
+|Bemerkung
+|Produktion-Info: Siehe Version 2.0.2
+
+|QLP DB Version
+|Ab Version 2.10 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.0.2.4421 vom 09.01.2018 - Olga Castro
+
+Änderungsbeschreibung::
+[19116] Anpassung der Troy-Konfiguration
+[20996] - FIX-Schnittstellen: Die Stammdaten werden entweder mit der ISIN oder WKN aus der DB gelesen.
+- Anpassungen in der BMA.Backend.Communicator.exe.config Datei
+- Löschung der MiFID I Konfigurationen.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|19116, 20996
+
+ifdef::ops[]
+|Änderungsart
+|- Change
+
+|Änderungsumfang
+|bin, conf, tp 
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+- Aktualisierung der JOR Connector Id
+- Löschung der MiFID I Konnektoren (MiFIDBookingConnector, OTCRM)
+
+ifdef::ops[]
+|Bemerkung
+|- BMA.Backend.Communicator.exe.config Anpassungen:
+Bloomberg Mapping:
+<mapping from="FixedHeader" to="Instrument" />
+JOR Mapping:
+<mapping from="FixedHeader" to="Instrument" />
+<mapping from="TimeStamp" to="TradeTimestamp" StringFormat="yyyyMMdd-HH:mm:ss.ffffffzz" append="+00" />
+Troy Mapping: 
+<mapping fromFixedValue="EUR" to="NamedValueMap, QuotationCurrency" />
+<mapping fromFixedValue="EUR" to="NamedValueMap, SettlementCurrency" />
+Löschung der MiFIDI Mapping.
+- MiFID I Parameter:
+Die MiFID I Information wird aus der BMA DB-Schema mit einem späteren DB-Skript gelöscht. 
+Die MiFID I Parameter werden bis die DB-Aktualisierung im BMA Frontend angezeigt.
+
+|QLP DB Version
+|Ab Version 2.10 
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.0.1.4338 vom 14.12.2017 - Olga Castro
+
+Änderungsbeschreibung::
+[19116] MiFID II Anforderung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|19116
+
+ifdef::ops[]
+|Änderungsart
+|- Apa Reporting Parameter, Formatierung der PatyDisplay Parameter 
+- ShortSelling LogikAnpassung für Xitaro
+- Change (MiFID II)
+
+|Änderungsumfang
+|Alle Verzeichnisse
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.10 (+ Skript BMA Data Aktualisierung)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V2.0.0.4289 vom 29.11.2017 - Olga Castro
+
+Änderungsbeschreibung::
+[19116] MiFID II Anforderung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|19116
+
+ifdef::ops[]
+|Änderungsart
+|- Change (MiFID II)
+- CSF Aktualisierung 
+
+|Änderungsumfang
+|Alle Verzeichnisse
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Ab Version 2.10 (+ Skript BMA Data Aktualisierung)
+
+|AIS Version
+|- AIS-TX-VT ab Version 2.0.11.2110
+- AIS Proxy ab Version 1.0.4.980 für AISP-TX-VT 
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.6.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.9.4049 vom 31.07.2017 - Olga Castro
+
+Änderungsbeschreibung::
+[17175] Serialisierungsfehler wurde korrigiert.
+[18613] Die Parameter-Notifikationen werden an alle BMA-Frontends gesendet
+[19078] Erweiterung der Bloomberg Schnittstelle um das Feld BBMarketSegmentID (Dieses Feld wird nur für ALLQ Messages validiert)
+Wenn der Inhalt des Feldes gleicht 'BMTF' ist so wird das Ticket automatisch (gemäß dem in BMA hinterlegten Buchungsparametersatz) verbucht.
+Wenn der Inhalt des Feldes nicht gleicht 'BMTF' ist so bleibt das Ticket im BMA-Client stehen, bis ein Händler (oder HO) das Ticket manuell (via Übertrag ins LPA) börslich verbucht.
+- CSF Aktualisierung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|19078; [20160726-0018]/17175; [20170508-0162]/18613
+
+ifdef::ops[]
+|Änderungsart
+|Change und Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|- Versionen abhängiger Assemblies:
+XDDTransaction 1.8.1.0
+
+|QLP DB Version
+|Ab Version 2.3.5 
+
+|AIS Version
+|- Information aus der Produktion:
+AIS-TX-VT 2.0.11.2110
+- AIS Empfohlene Version ab 2.0.31.3161 für AIS-TX-VT
+- AIS Proxy min Version 1.0.4.980 für AISP-TX-VT
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.2.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.8.3255 vom 15.06.2016 - Olga Castro
+
+Änderungsbeschreibung::
+Korrekte Error-Meldung bei unbekannten Xetra-Instrumenten.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|15720
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|- Siehe Version 1.8.7.3219
+
+|QLP DB Version
+|Ab Version 2.3.5
+
+|AIS Version
+|- Information aus der Produktion:
+AIS-TX-VT 2.0.11.2110
+- AIS Empfohlene Version ab 2.0.31.3161 für AIS-TX-VT
+- AIS Proxy min Version 1.0.4.980 für AISP-TX-VT
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.1.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.7.3219 vom 24.05.2016 - Olga Castro
+
+Änderungsbeschreibung::
+Bloomberg TradeTimestamp-Format: Es wurde das Mapping-Format in der BMA.Backend.Communicator.exe.config Datei angepasst. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|[20160524-0008]/15715
+
+ifdef::ops[]
+|Änderungsart
+|Bug-Fix
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja 
+
+ifdef::ops[]
+|Bemerkung
+|- BMA.Backend.Communicator.exe.config 
+ <mapping from="TradeTimeStamp"to="TradeTimestamp" StringFormat="yyyyMMdd-HH:mm:ss.fffzz;yyyyMMdd-HH:mm:sszz" append="+00" />
+ - BMA.Backend.xml
+ Logger (Siehe Version 1.8.6.3196)
+
+|QLP DB Version
+|Ab Version 2.3.5
+
+|AIS Version
+|- Information aus der Produktion:
+AIS-TX-VT 2.0.11.2110
+- AIS Empfohlene Version ab 2.0.31.3161 für AIS-TX-VT
+- AIS Proxy min Version 1.0.4.980 für AISP-TX-VT
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.1.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.6.3196 vom 03.05.2016 - Olga Castro
+
+Änderungsbeschreibung::
+- Asynchrone Log4Net-Appender für die Protokollierung der Eingangsgeschäfte eingebaut.
+- Austausch BSAG.Taxen.dll durch BS.Taxe.dll (BS.TaxenService.Communication.dll)
+- CSF Aktualisierung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|15128
+
+ifdef::ops[]
+|Änderungsart
+|Change (Ankündigungstaxe)
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- InputTradesAppender. 
+ - Logger:
+<!-- Spezieller Logger fuer die Protokollierung der Eingangsgeschaefte.-->
+<logger name="InTrades">
+<level value="INFO" />
+<appender-ref ref="InputTradesAppender" />
+</logger>
+
+|QLP DB Version
+|Ab Version 2.3.5
+
+|AIS Version
+|- Information aus der Produktion:
+AIS-TX-VT 2.0.11.2110
+- AIS Empfohlene Version 2.0.31.3161 für AIS-TX-VT
+- AIS Proxy min Version 1.0.4.980 für AISP-TX-VT
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.1.4.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.5.2825 vom 30.10.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[14297] Korrektur bei der NamedValueMap-Werte für die Auf -/Abschläge Parameter. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|14297
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Information aus dem Komponentenhanbuch: 
+- !!! Bei einem untertägigem Neustart des BMA-Backends muss anschließend der BMA-Distributor und MIFID-OTC neu gestartet werden !!!.
+
+|QLP DB Version
+|Version 2.3.5
+
+|AIS Version
+|AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.1.1.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.4.2807 vom 27.10.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[14272] Ein FATAL Error wird geworfen wenn keine Aktualisierung bei der Datenbank stattgefunden hat.
+Die Anwendung wird gestoppt und muss neue gestartet werden.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|14272/[20150825-0050]
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix 
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Information aus dem Komponentenhanbuch: 
+- !!! Bei einem untertägigem Neustart des BMA-Backends muss anschließend der BMA-Distributor und MIFID-OTC neu gestartet werden !!!.
+
+|QLP DB Version
+|Version 2.3.5
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.1.1.0
+
+|Third Party (Version)
+|log4net/1.2.10.0 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.3.2736 vom 06.10.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[14093] Kurs Auf- und Abschläge Anforderungen.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|14093
+
+ifdef::ops[]
+|Änderungsart
+|Change 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Neue Parameter:
+<Parameter key="NominalThresholdCount">4</Parameter>
+<Parameter key="NotAllowedPriceAddDed4Systems">Troy</Parameter>
+
+|QLP DB Version
+|Version 2.3.5
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|4.0
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|3.1.1.0
+
+|Third Party (Version)
+|-/- 
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.2.2515 vom 09.07.2015 - Olga Castro, Jochen Schaffer
+
+Änderungsbeschreibung::
+- Der FATAL-Error wird gefangen und als Error protokolliert. Der Error wird an LPM weitergeleitet.
+- Wenn der Client keine Heartbeats sendet, wird die Verbindung nach der konfigurierten Minuten (ClientCloseNoHeartbeatDelayMin) geschlossen.
+- Lese nach einer Anforderung noch mal die heutigen Geschaeftsinformationen aus der DB, 
+wenn die konfigurierten Minuten (ReReadTodayBookingsMinutes) abgelaufen sind. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|13688 [#20150610-0003], 13712/[20150507-0094]
+
+ifdef::ops[]
+|Änderungsart
+|Hot-fix 
+
+|Änderungsumfang
+|bin, conf
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|- Neuer Parameter bei der Konnektors 'BookingService' und 'FrontendParameterService'
+<Parameter key="ClientCloseNoHeartbeatDelayMin">3</Parameter>
+- Neue Parameters
+<Parameter key="ReReadTodayBookingsMinutes">1</Parameter>
+- Zeit-Anpassung fuer der Parameter CommandTimeout
+CommandTimeout = 240 Sek.
+
+|QLP DB Version
+|Voraussichtlich Version 2.3
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.1.2428 vom 12.06.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[13581] Erweiterung der MIFID-OTC Schnittstelle und Behandlung der manuellen OTC-Reports.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|13581/[#20150605-0007]
+
+ifdef::ops[]
+|Änderungsart
+|[13581] Hot-fix (Change)
+
+|Änderungsumfang
+|bin, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja: [Communicator.exe.config]
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Voraussichtlich Version 2.3
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.8.0.2383 vom 22.05.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[13472] MIFID-OTC Anforderung
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|13472
+
+ifdef::ops[]
+|Änderungsart
+|[13472] Change
+
+|Änderungsumfang
+|bin, conf, tp
+endif::[]
+
+|Konfigurationsänderungen
+|Ja: [BMA.Backend.xml und Communicator.exe.config]
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|Voraussichtlich Version 2.3
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.7.1.2352 vom 12.05.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[13452] Automatische Erkennung der manuellen Verbuchungen nach einer HIT-Ausführung (XDD-Transaction)
+[12780] Materialisierung der Clientliste vor der Verarbeitungsschleife.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|13407, 12780
+
+ifdef::ops[]
+|Änderungsart
+|[12780, 13452] Bugfix
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Ja: [BMA.Backend.xml und Communicator.exe.config]
+
+ifdef::ops[]
+|Bemerkung
+|Mapping und Context-Anpassungen wegen neuer XDD-Transaction Version 
+
+|QLP DB Version
+|Voraussichtlich Version 2.0
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.7.0.2029 vom 09.02.2015 - Olga Castro
+
+Änderungsbeschreibung::
+[10106] Neues CSF 2.5.12.3 und Xitaro Anforderungen.
+[10818] Berücksichtigung der ServiceBehavior-MaxItemsInObjectGraph Parameter. Damit wird der MaxItemsInObjectGraph-Parameter konfiguriertbar. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|10106, 10818
+
+ifdef::ops[]
+|Änderungsart
+|Change
+
+|Änderungsumfang
+|bin
+endif::[]
+
+|Konfigurationsänderungen
+|Ja: [BMA.Backend.xml und Communicator.exe.config]
+
+ifdef::ops[]
+|Bemerkung
+|Neu <Parameter key="AssignAufgabe">Y</Parameter> (fuer alle Xitaro EPP-Verbuchungen)
+<Parameter key="MaxItemsInObjectGraph">2147483646</Parameter> beim StandardWcfService
+Loechung <Parameter key="SubMaklerId"></Parameter>
+
+|QLP DB Version
+|Voraussichtlich Version 2.0
+
+|AIS Version
+|Information aus der Produktion: AIS Taxen= AISP-TX-VT 1.0.3.6; AIS Proxy= AIS-TX-VT 1.2.5.484
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.6.4.1619 vom 09.09.2014 - Olga Castro
+
+Änderungsbeschreibung::
+[7337] placeholder.txt Datei hinzugefügt. 
+[9023] Anpassung der Bloomberg-Geschäfte im BMA: Ausland (AKV) und Instrument prozentnotiert T+ 2 Tage (bislang T + 3 Tage)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|7337, 9023
+
+ifdef::ops[]
+|Änderungsart
+|[7337] Bugfix [9023] Change
+
+|Änderungsumfang
+|bin
+bma-master\wwwroot\services-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|1. bma-master Verzeichnis muss aktualisiert werden.
+2. WorkAround für den Fehler BadRequestException im FrameworkProzess (Http Anzeige)
+Eintragung 'localhost' und '127.0.0.1' in die hosts-Datei file://C:\Windows\System32\drivers\etc
+ Die BMA Funktionalität: Zwei Monitoren (BMA-Backend und XDDTransaction) in eine Fenster anzeigen zu lassen, wird mit IE Version 11 nicht unterstütz.
+3. Die Anzeige 'Valuta' in BMA-Frontend korrespondiert zu dem Wert CUSTODY_SETTLEMENT_PERIOD aus der view [BMA].[VW_CTR_INSTRUMENTS] 
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.6.3.1331 vom 26.02.2014 - Olga Castro
+
+Änderungsbeschreibung::
+[6929] BMA–Matching Logik wurde mit einer Status-Gewichtung erweitern. 
+ Damit kann man zwei identische Geschäfte [Preis, Nominale, Type] zu einer Xontro-Transaction besser zugeordnet werden.
+[7034] Erweiterung der NoteText-Validierung bei Bloomberg Geschäfte.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|6929 [20140123-0052], 7034
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix und Bloomberg NoteText Validierung-Change
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Ja Konfigurationdatei = Communicator.exe.config
+
+ifdef::ops[]
+|Bemerkung
+|Neuer Parameter [<add key="Bloomberg.NoteText.ValidationText" value="BS:"/>] eingebaut. 
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.6.2.x vom 20.11.2013 - Olga Castro
+
+Änderungsbeschreibung::
+Der Xetra-Preis und der -Devisenkurs werden kaufmännisch gerundet.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|5675
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Nein
+
+ifdef::ops[]
+|Bemerkung
+|Für die Produktion:
+Siehe Bemerkungen in Version 1.6.0.0 und 1.6.1.x
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.6.1.x vom 15.11.2013 - Olga Castro
+
+Änderungsbeschreibung::
+[5497] Laden der Daten wird nach dem LPM-Ready-Event gestartet.
+[5497] Der CommandTimeout-Parameter aus der Konfiguration wird auch für das Lesen der DB-Daten verwendet.
+ [5581] Bei des Validierung des Feldes NoteText wird ein leer string (Blanks) als string der Länge 0 interpretiert.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|5497 [20131107-0012], 5581
+
+ifdef::ops[]
+|Änderungsart
+|[5497] Hot-Fix (Produktion Version 1.5.6.x)
+[5581] Bugfix
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Ja - Type des Bloomberg (Fix-Engine) Connectors
+
+ifdef::ops[]
+|Bemerkung
+|Der Bloomberg (Fix-Engine) Connector type wurde geändert, wegen die neue Architektur (FixEngine - Distrubutor - BMABackend) 
+Siehe Bemerkungen in Version 1.6.0.0
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.6.0.0 vom 23.08.2013 - Olga Castro, Andreas Meisner
+
+Änderungsbeschreibung::
+- #3794: Ergänzung eines Parameters zur Konfiguration einer KV-Nummer anhand eines Parametersatzes + VCON Anforderung.
+- Im Dialog zur Änderung eines Parameter-Index, wird der aktuelle Index als Vorbelegung angezeigt. Eine Löschung des Textfeldes und anschließendes Ok führt nicht mehr zu einer Fehlermeldung (3234)
+ - Falls ein Filter aktiviert ist und eine Buchung auf Status Canceled gesetzt wird, wird die Anzeige in den Tabreitern korrekt aktualisiert (2668)
+ - Parameter "Manuell" jetzt auch für Xetra und Troy gültig (damit 3223 obsolet), wird in der Praxis aber nicht verwendet werden.
+ - Sobald sich ein Frontend anmeldet, wird zusätzlich zur SessionId auch die IP-Adresse und Port des Clients angezeigt (3862).
+ - Falls es bei einer Notifizierung oder Response vom Master an ein Frontend zu einer Exception kommt, wird der entsprechende Client aus der Liste der aktiven Clients entfernt und nicht mehr weiter benachrichtigt. (3861)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|4612, 3794, 3861, 3862, 3859, 3793, 2668,3223, 3234 [#20130225-0057], 4966
+
+ifdef::ops[]
+|Änderungsart
+|VCON Anforderung (3794), Bugfixes (alle anderen WIs)
+Xetra Teilausführung Anforderung (4966)
+BMA – Matching neuer Broadcast (4612): Relevante Subtypes: 065, 001, 011, 104, 130, 044, 175, 176, 171, 180, 114, 122, 179, 182, 127
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|1. Das DB-Skript "2013-08-BMA_Vcon_und_Xontro_DepositaryBankId.sql" MUSS in die QLPDB eingespielt werden, 
+ bevor die BMA.Backend Version 1.6.* gestartet wird.
+2. Falls Rollback MUSS das DB-Skript "2013-08-BMA_Vcon_Rollback.sql" in die QLPDB eingespielt werden,
+bevor die letze BMA.Backend Version 1.5.5.* gestartet wird.
+ 3. Ohne die relevante Subtypes wird keine richtige Matching stattfinden.
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.5.x vom 11.06.2013 - Olga Castro
+
+Änderungsbeschreibung::
+- 1. Korrekte interne Speicherung der Xetra-SourceId für die Validierung im Re-Start Fall eingebaut. 
+Damit wird beim "TimeOut" bzw. "Server reagiert nicht" -Fehler die doppelte Verbuchung verhindert. 
+- 2. Der Parameter "Connect Timeout" in der ConnectionString ist nicht relevant für die Lösung des TimeOuts Problems, 
+ weil mit diesem Parameter wird nur die Zeit bis eine Verbindung stattfindet gesteuert. 
+ Somit kann dieser Parameter aus ConnectionString gelöscht werden. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#4247 [#20130610-0022]
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Ja
+
+ifdef::ops[]
+|Bemerkung
+|Kein "Connect Timeout" in der QlpDatabaseConnectionString.
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.4.x vom 04.04.2013 - Olga Castro
+
+Änderungsbeschreibung::
+- #3994: Überprüfung der Existenz der Datenbank eingebaut. Somit wird eine unerwünschte Erstellung einer Datenbank verhindert.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3994
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.3.0 vom 02.04.2013 - Olga Castro
+
+Änderungsbeschreibung::
+- #3955: Thread-Probleme gefixt: Der Xetra Timer-Prozess wird in ProcessLoop gestartet.
+- #3956: CommandTimeout bei der Aktualisierung der Datenbank eingebaut. Default Timeout = 30 Sek.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3955 [#20130307-0023], #3956 [#20130322-0011]
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|Ja: Neuer Paremeter [ <Parameter key="CommandTimeout">300</Parameter> ]
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.2.0 vom 26.02.2013 - Olga Castro
+
+Änderungsbeschreibung::
+- #3778: Korrekte Zuordnung der Geschäfte nach Geschäftart beim Teilausführungen.
+Zuordnung des Feldes "InitiatingTrader" aus der IDS-Feld: 502 [partSubGrpIdCod] + "-" + 503 [partNoText]. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3778 [#20130222-0031] 
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing + Neue Anforderung (Anzeige des InitiatingTrader)
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.1.0 vom 04.02.2013 - Olga Castro
+
+Änderungsbeschreibung::
+- #3357: Korrekte Zuordnung der Source_ID aus derm Xetra-IDS-Packet.
+- #3445: Bei Xetra-Geschäfte wird nur ein mal gerundet (Nach der Berücksichtigung von Teilausführungen)
+Keine Rundung beim Empfang der einzelnen Xetra-Geschäfte.
+Eindeutige Zuordnung der Source_Id bei der Xetra-Teilausführung.
+Restart Überprüfung der Xetra-Geschäfte.
+- #3451: Korrekte Zuordnung und Validierung der SettlCurrency und QuotationCurrency. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3357, #3445, #3451
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis und Konfigurationsdatei BMA.Backend.xml
+endif::[]
+
+|Konfigurationsänderungen
+|Log4net Einträge für Xetra und Troy Projekte.
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.9 vom 14.01.2013 - Olga Castro
+
+Änderungsbeschreibung::
+- #3228: Korrekte Behandlung aller EnterTrade-Nachrichten, die zu einer Preisfeststellung zugeordnen sind und vor der Preisfeststellung empfangen werden. 
+ (Alle EnterTrade-Nachrichten werden gespeichert und nach dem Empfang der Preisfeststellung werden in der Transaktion bearbeitet) 
+- #3238: Anpassung der Fehlermeldung bei der Validierung des Devisenkurs (SettlementCurrencyRate)
+ - #3244: Korrekte Bearbeitung der "<null>" Werte für die Bloomberg-Nachrichten. 
+ Wenn aber Pflicht-Werte wie Quantity oder Preis als <null> gesendet werden, wird ein ERROR in Backend angezeigt und die Nachricht wird nicht an Frontend weitergeleiet.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3228, #3238, #3244
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.8 vom 20.12.2012 - Mattanja Kern, Elizabeth Schümer
+
+Änderungsbeschreibung::
+- KV-Nr. Mapping hat nicht funktioniert, weil die KVN erst zu einem späteren Zeitpunkt gesetzt wurde
+ als die Prüfung der Parameter.
+ - #3131: SettlementCurrency ist Plichtfeld, wenn eine QuotationCurrency gesetzt ist (+Devisenkurs vorhanden).
+ - Resource-Files angepasst.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3130, #3131
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.7 vom 20.12.2012 - Mattanja Kern, Elizabeth Schümer
+
+Änderungsbeschreibung::
+Merge des Hotfix aus Version 1.4.4.4 (Iteration 4 Branch):
+ Erfüllungstage weichen von den Feiertagen ab - der 24.12. und der 31.12. sind zwar Nichthandelstage
+ aber trotzdem Erfüllungstage und müssen bei der Valutadatumsberechnung mit einbezogen werden.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3128 / [#20121220-0013]
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.6 vom 18.12.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Validierung leerer Filter ergänzt
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|--
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.5 vom 18.12.2012 - Mattanja Kern, Olga Castro
+
+Änderungsbeschreibung::
+- Verhalten bei Fremdwährung korrigiert (Bugfix Troy & Xetra)
+ - #3115-Fehler beim Empfangen von XONTRO Paketen: Korrekte Behandlung aller Maklertagebücher, die zu einer Preisfeststellung zugeordnen sind und vor der Preisfeststellung empfangen werden. 
+ (Alle Maklertagebücher werden gespeichert und nach dem Empfang der Preisfeststellung werden in der Transaktion bearbeitet) 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3115
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.4 vom 14.12.2012 - Mattanja Kern, Olga Castro
+
+Änderungsbeschreibung::
+- Scrollverhalten der Parameterpflege geändert: Bei sehr hohen Zeilen (große Filter-Definition)
+ ist das Grid bisher beim Scrollen "gesprungen". Jetzt wird auch die einzelne Zeile gleichmäßig
+ gescrollt. (ScrollViewer.CanContentScroll="False")
+ - #3049: Konfigurations"fehler" - Beschreibung des Troy-Connectors angepasst (Service).
+ - Null-Exception im Grid-Verhalten abgefangen (spezielle Situation beim Editieren der Parameter).
+ - FixEngineNullValue "<null>" wird im MappingService jetzt wieder übersprungen
+ - #2899 Überarbeitung der Timeout beim EnterSingleTrade und Verwendung der neuen XBMService-Version 1.2.0.3
+ (XBMService ist ein BMA-Service. Achtung nicht mit XBM verwechseln).
+ - #3079: Überarbeitung der Behandlung der SettlementCurrency (Anforderungen angepasst nachdem sich
+ in einer der Vorgängerversionen ein Fehler eingeschlichen hat, der Feld 120 mandatory gemacht hatte).
+ - Fehlende Fehler-Nachricht bei fehlender SettlementCurrency ergänzt.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3049, #2899
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis, Konfiguration
+endif::[]
+
+|Konfigurationsänderungen
+|ja, nur Beschreibungstext
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.3 vom 12.12.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Fehler im Frontend "Vom BMA-Backend wurde der Status einer unbekannten Buchungsinformation geändert.
+ -> kleine Überarbeitung des WCF-Service (Interface IExtendedFrontendBookingService entfernt,
+ da Duplikat von IFrontendBookingServiceCallback)
+ - Refactoring in XetraBookingInformationProvider (zur besseren Dokumentation)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3034, #3032
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis, Konfiguration
+endif::[]
+
+|Konfigurationsänderungen
+| - Nur eine Instanz des IBookingComparer wird benötigt, Anpassung im Workflow-Service
+ - #3034: Parameter manuelle Buchung darf nur in Bloomberg gesetzt werden, Validierung angepasst
+ - #3032: Buchung ohne Standardparameter, Prüfung auf vorhandenen Parameter eingeführt--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.2 vom 07.12.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Bug #3004: Kommentare in Konfigurationdatei auf deutsch übersetzt
+ - Bug #3005, #3007: Parameter-Validierung nicht Bloomberg-Spezifisch, sondern für alle Systeme
+ gegen Xontro.
+ - Code-Cleanup, Erweitertes Logging
+ - Bug #3028: LPA-Übertrag muss K/V nicht Buy/Sell übertragen.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#3004, #3005, #3006, #3007, #3028
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis, Konfiguration
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.1 vom 22.11.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Bug #2721: Überarbeitung der Behandlung fehlender Devisenkurse, es wird kein technischer Fehler mehr geloggt.
+ -> Betroffen von der Änderung sind alle Eingänge (Bloomberg, Troy und Xetra).
+ -> Die Prüfung der Devisenkurse erfolgt in den Implementierungen von IBookingTypeInspector (bzw. der neuen
+ abstrakten Implementierung).
+ -> Die Änderung ist durch die Testfälle im Regressionstest abgedeckt (nach Testdokument_BMA_Iteration4.docx).
+ - Anpassungen am Textfeld-Mapping (der angezeigte Parameter "Textfeld" war bisher Bloomberg-spezifisch).
+ -> Wenn aus Bloomberg Text im Textfeld enthalten ist, soll die Buchung manuell ausgesteuert werden.
+ -> Der Text wird im BloombergXontroSourceTargetMapper in den Xontro-Parameter übernommen, wenn kein Textfeld aus den
+ Parameter gesetzt wurde.
+ -> Ab dieser Version wird der Inhalt des Textfelds angezeigt, der auch an Xontro übertragen wird. Vorher wurde ein
+ spezieller Parameter dafür verwendet.
+ - Ergänzung der Code-Dokumentation und des Feinkonzepts.
+ - Konfigurationsparameter PartialExecutionCombineIntervalMilliseconds
+ - Korrektur beim Auslesen des IDS-Mappings und SettlementCurrency=EUR für Troy
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#2721
+
+ifdef::ops[]
+|Änderungsart
+|Bugfixing
+
+|Änderungsumfang
+|bin-Verzeichnis, Communicator.exe.config (im bin-Verzeichnis enthalten)
+endif::[]
+
+|Konfigurationsänderungen
+|-- (nur ..exe.config)
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.5.0.0 vom 19.11.2012 - Mattanja Kern, Jochen Schaffer
+
+Änderungsbeschreibung::
+Umsetzung der Anbindungen an Xetra und Troy
+ - Umfangreiche Änderungen am IDS-Adapter mit je einer Mapping-Konfiguration für die
+ Eingänge von Bloomberg und "Troy/EKS-Distributor". Aufgrund des speziellen Formats
+ für Preis und Nominale der Xetra-Nachrichten, wurde für Xetra ein eigener IDS-WorkerAgent
+ erstellt.
+ - Auslagerung des Mappings in einen Service zur besseren Testbarkeit
+ - Unit-Tests
+ - Mapping erweitert um FixedHeader-Konfiguration
+ - IBookingInformationProvider: Standardimplementierung in DefaultBookingInformationProvider,
+Xetra-Implementierung in XetraBookingInformationProvider mit Zusammenfassung der Buchungen
+zu einer ISIN innerhalb von 3 Sekunden.
+ - XetraIdsWorkerAgent zur Verarbeitung der Xetra-Nachrichten.
+ - Umsetzung der Plugins für Xetra und Troy
+ - ISourceTargetMapper angepasst und konfiguriert
+ - XontroBloombergComparer geändert in XontroBookingComparer, da nur abhängig vom Zielsystem
+ - SQL-Skript für initiales Setup der Parameter für Xetra und Troy
+ - Konfiguration der "Connectors" für Bloomberg, Xetra und Troy angepasst
+ - Aktualisierung der BSAG.Utilities (ObjectContainer) auf Version 1.6.11.0
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|#2745, #2746
+
+ifdef::ops[]
+|Änderungsart
+|Erweiterung
+
+|Änderungsumfang
+|Konfiguration, bin-Verzeichnis, tp-Dateien
+endif::[]
+
+|Konfigurationsänderungen
+|Ja, siehe Änderungsbeschreibung
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.4.3 vom 17.10.2010 - Olga Castro
+
+Änderungsbeschreibung::
+Devisenkurs-Berechnung: Bei SettlCurrFxRateCalc = „D“ wird der Devisenkurs (SettlCurrFxRate) einfach an XONTRO weitergegeben und 
+ bei SettlCurrFxRateCalc = „M“ wird der Kehrwert Devisenkurs = (1/SettlCurrFxRate) an XONTRO übergeben.
+ Der Devisenkurs wird im Frontend angezeigt.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|2717 / 2706
+
+ifdef::ops[]
+|Änderungsart
+|Hot Fix
+
+|Änderungsumfang
+|Der Umfang der Änderungen bezieht sich nur auf das bin-Verzeichnis.
+endif::[]
+
+|Konfigurationsänderungen
+|Keine. 
+
+ifdef::ops[]
+|Bemerkung
+|Keine.
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.4.2 vom 08.10.2010 - Mattanja Kern, Olga Castro
+
+Änderungsbeschreibung::
+Bug #2527: Sortierung der Parameterliste im Parameterservice wurde nach Änderungen im
+ Frontend nicht korrekt in den Parameterservice übernommen. Das ist jetzt behoben.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|2527
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|Der Umfang der Änderungen bezieht sich nur auf das bin-Verzeichnis.
+endif::[]
+
+|Konfigurationsänderungen
+|--
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.4.1 vom 01.10.2010 - Mattanja Kern
+
+Änderungsbeschreibung::
+Der Parameter "Preisfeststellung" wird jetzt als 0 (nicht gesetzt) erkannt, wenn er nicht
+ gesetzt ist.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|2647
+
+ifdef::ops[]
+|Änderungsart
+|Bugfix
+
+|Änderungsumfang
+|Der Umfang der Änderungen bezieht sich nur auf das bin-Verzeichnis.
+endif::[]
+
+|Konfigurationsänderungen
+|Keine
+
+ifdef::ops[]
+|Bemerkung
+|Keine
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.4.0 vom 01.10.2010 - Olga Castro
+
+Änderungsbeschreibung::
+Wegen XBM.Proxy (2.3.2.1) Anpassung wird die neue XBMService-Referenz (1.2.0.2) verwendet.
+ XBM-Proxy Anpassung: Übergabe des Devisenkurses beim EnterOrderEnterPrice wurde korrekt behandelt. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|2644 
+
+ifdef::ops[]
+|Änderungsart
+|Bug Fix
+
+|Änderungsumfang
+|Der Umfang der Änderungen bezieht sich nur auf das
+ bin-Verzeichnis.
+endif::[]
+
+|Konfigurationsänderungen
+|Keine. 
+
+ifdef::ops[]
+|Bemerkung
+|Keine.
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.3.2 vom 27.09.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Anpassung des Parameter-Service: Bei neu angelegten Parametern werden Werte mit null vorbelegt
+- Log-Ausgabe im Parameter-Service verbessert, ToString() des InputParameters ergänzt
+- Bug #2576: Anpassung der Parameter-Validierung: Bei börslichen Buchungen darf bei Preisfindung
+und Geschäft kein Textfeld eingegeben werden.
+- Unit-Tests erweitert
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.3.1 vom 26.09.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Bug #2526: Parameterverwaltung, Validierung des Transaktionsentgelts angepasst, so dass kein Wert
+(auch nicht 0) eingetragen werden darf, wenn Transaktionsentgelt nicht abweichend ist.
+- Bug #2576: Validierung verbessert (Filter-Validierung, O/G gesetzt)
+- Ohne Bug-Workitem: Fehler bei der Serialisierung des FilterSets behoben, Änderungen an Filtern werden
+jetzt korrekt übernommen.
+- Bug #2580: Kein Error wenn Authentifizierung der Parameterverwaltung fehlschlägt - User ist nicht
+in Handelsorga. Logausgabe erweitert.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.3.0 vom 31.08.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Bug #2468: Parameterverwaltung, Devisenkurs sollte nicht konfigurierbar sein, Definition angepasst
+- Bug #2472: Parameterverwaltung, Validierung unvollständig, Validierung erweitert:
+ - KVN (Depotbank) zwischen 1 und 9999
+ - Transaktionsentgelt darf nur gesetzt sein, wenn Transaktionentgelt = AT ist
+ - Order muss immer mit Preisfeststellung sein
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.2.0 vom 31.08.2012 - Olga Castro
+
+Änderungsbeschreibung::
+- Anpassungen beim XDDTransaction (neue Version 1.4.0.0) und BMA.Backend Startzeitpunkt des FixEngine-Konnektors: Der Empfang der Bloomberg-Geschäfte (FixEngine-Konnektor)
+wird erst gestartet wenn die XDD-Backup-Empfang Nachricht erhalten wurde. 
+- Bloomberg Geschäfte, deren Zeitstempel vor dem Start des BMA.Backends liegt, müssen manuell in Xontro verbucht werden. Diese Geschäfte erhalten den Buchungstyp "Manually".
+- Die Konnektorbeschreibung und Port zum TicketMaster wurden entprechend die QM-Beschreibung (XSAM Ticket Master Sperren-Service / TP_XTMSPERRE) angepasst.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.1.0 vom 27.08.2012 - Olga Castro
+
+Änderungsbeschreibung::
+- Neue XBM-Service Version 1.2.0.1: Log-Meldung Anpassung wenn eine unerwartete Xontro-Nachricht empfangen wird.
+- Verbesserung beim XDD-Transaction wegen Überarbeitung der Endlosschleife: Neue Version BSAG.XDDTransaction.Implementation.dll 1.3.2.2
+- Ersetzen des SettlementFlag "AG" durch einen leeren String "".
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.4.0.0 vom 14.08.2012 - Olga Castro, Andreas Meisner, Mattanja Kern
+
+Änderungsbeschreibung::
+- Umsetzung der Parameter-Verwaltung
+- Verbesserungen und Fehlerbehebung am Database-Service
+- Devisenkurs und doppelte Buchung Implementierung (Anforderungen: BMA-BM-032 bis BMA-BM-036) Es wird die XBMService Version 1.2.0.0 (XBM-Proxy 2.3.1.0) verwendet.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.5.2 vom 14.08.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- HotFix Bug #2366: Ersetzen des SettlementFlag "AG" durch einen leeren String "".
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|- Produktivnahme des Hotfix erst nach Freigabe durch HO & Jürgen
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.5.1 vom 08.08.2012 - Andreas Meisner
+
+Änderungsbeschreibung::
+- HotFix Bug #2345: Technischer Fix, Endlosschleife kann nicht mehr auftreten. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|Für diesen Hotfix muss nur die Assembly BSAG.XDDTransaction.Implementation.dll ausgetauscht werden. Bisherige Version 1.3.2.0, neue Version 1.3.2.1.
+Am BMA-Master und in der Konfiguration hat sich nichts verändert. Achtung: Der fehlerhafte Port zum TicketMaster wurde in dieser Auslieferung nicht geändert.
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.5.0 vom 06.08.2012 - Andreas Meisner
+
+Änderungsbeschreibung::
+- Fix Bug #2329: Xontro Textfeld darf leer sein.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.4.1 vom 03.08.2012 - Mattanja Kern
+
+Änderungsbeschreibung::
+- Fix Bug #2323: Fehlermeldung vor der Meldung "Mapping values successful." wird jetzt mit angegeben.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|--
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.4.0 vom 26.07.2012 - Olga Castro, Mattanja Kern, Andreas Meisner
+
+Änderungsbeschreibung::
+- Änderung an Authentifizierung des BookingService (keine Exception)
+- Die Dateien AdvancedInfoService.Client.XmlSerializers.dll, AdvancedInfoService.Common.XmlSerializers.dll, Euwax.CSF.ServerFramework.XmlSerializers.dll werden
+im Postbuild Event erzeugt und sind nun Bestandteil des cab, so dass diese Dateien nicht mehr zur Laufzeit erstellt werden müssen. (WI 2265)
+- Bugfixing: Überschreibung der Booked Status (2272)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.3.0 vom 25.07.2012 - Olga Castro
+
+Änderungsbeschreibung::
+- 2268 Bugfixing bei der Erstellung der SingleTrade Request (Anpassung nach neuer Spezifikation "Grobkonzept CR-023 XONTRO Adapter Bloomberg") 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.2.1 vom 23.07.2012 - Olga Castro
+
+Änderungsbeschreibung::
+- SOB entsperre nach StartPricing- und XontroSOB-Fehler für die Verbuchung mit EnterOrderEnterPrice eingebaut.
+- Neue XBMService Version (1.1.1.1) wegen Fehler beim CancelPricing Request. 
+- 2244: Prüfung der Transaktionsentgelt nur beim Entgelt=AT durchgeführt und Validierung der doppelten Buchung eingebaut.
+Buchungen mit Transktionsententgelt müssen manuell verbucht werden, weil für die Iteration 3 der XBM-Proxy(2.3.0.1) kein OTC mit Transktionsententgelt verbuchen kann.
+- 2115: Implementierung der IDisposable Interface vom TempFileCollection in WcfServiceConnector.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.2.0 vom 17.07.2012 - Olga Castro 
+
+Änderungsbeschreibung::
+- 2206: Anpassung bei XDDTransaction (Version 1.3.2.0): Die BrokerDiary-Nachricht ohne Preisfeststellung wird auch für den Abgleich verwendet.
+- 2211: Timeout Request-Behandlung beim XBMService (Version 1.1.1.0)
+Anpassung der Konfigurationsdatei "BMA.Backend.xml": Verwendung der XBMServiceClient in der Konfiguration des XBM-Proxy-Konnektors.
+TicketMasterService (Version 1.0.1.2): Korrektur der SenderId beim LockRequest und Löschung der Transaction beim Lock-Response.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.1.1 vom 10.07.2012 - Olga Castro, Mattanja Kern 
+
+Änderungsbeschreibung::
+- Korrektur beim EnterSingleTrade Request (OTC).
+- Bug 2179: Korrektur beim TicketMasterService. Das Instrument wird nach der Verarbeitung bzw. nach Timeout freigegeben.
+Fixes aus Iteration 2:
+- Bug 2005: Implementierung der SingleThreaded Service Registrierung der Object Container für die XDDTransaction-Events. 
+- Bug 2005: Database-Service geändert um solche Probleme in Zukunft zu verhindern.
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.1.0 vom 26.01.2012 - Olga Castro
+
+Änderungsbeschreibung::
+1882: Neue Xontro-Parameter "Xontro_ProprietaryTrade": boolscher Wert, welcher definiert ob die OTC-Verbuchung ein Eigengeschäft ist oder nicht. 
+Fixes aus Iteration 2:
+- Bug 1967: Probleme bei der generierung der XDD-Transactions, wenn Kunde und MarketMaker (aus BB-Trade) die identische KV haben wurde gefixt.
+- Bug 1871: Bearbeitung der Key der internen Listen. Key wird immer ISIN_PeisNr sein, unabhänging von Preis- oder Trade-Nachricht.
+- Bug 1851: Anpassung der Xontro-Key Definition beim XDDTransaction. Es wird zusätzlich zu dem XontroKey die Transaction-Type in der Key integriert. 
+Somit können die generierten Transaction aus den gleichen Xontro-Nachrichten anhand der Transaction-Type eindeutig identifiziert werden. 
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|N/A
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
+
+== V1.3.0.0 (Iteration 3, Release 0) vom 15.06.2012 - Andreas Meisner, Olga Castro, Mattanja Kern
+
+Änderungsbeschreibung::
+Features:
+- Automatische Verbuchung (XontroAdapter etc.)
+
+ifdef::html[]
+.__Klicken um Details zu zeigen/verbergen__
+[%collapsible]
+====
+endif::[]
+
+
+[cols="1,1"]
+|===
+|Workitem
+|N/A
+
+ifdef::ops[]
+|Änderungsart
+|N/A
+
+|Änderungsumfang
+|N/A
+endif::[]
+
+|Konfigurationsänderungen
+|N/A
+
+ifdef::ops[]
+|Bemerkung
+|- Änderungen und Bugfixes sind aus Iteration 2 bis Version 1.2.5.0 enthalten.
+
+|QLP DB Version
+|N/A
+
+|AIS Version
+|N/A
+
+|NET Framework Version
+|N/A
+endif::[]
+
+ifdef::dev[]
+|CS Framework Version
+|N/A
+
+|Third Party (Version)
+|N/A
+endif::[]
+|===
+
+ifdef::html[]
+====
+endif::[]
