@@ -5,7 +5,7 @@ os.chdir("/home/ec2-user/project/abides_dev")
 import sys
 
 sys.path.insert(0, "/home/ec2-user/project/abides_dev")
-import version_testing.runasof as runasof
+import abides_version_testing.runasof as runasof
 
 ## run rmsc03 config with ABIDES old version
 sha_old = "8ab374e8d7c9f6fa6ab522502259e94e550e81b5"

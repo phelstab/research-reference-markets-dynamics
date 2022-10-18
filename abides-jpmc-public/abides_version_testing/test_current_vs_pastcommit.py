@@ -17,7 +17,7 @@ def get_path(level):
 
 root_path_abides = get_path(1)
 sys.path.insert(0, root_path_abides)
-import version_testing.test_config as test_config
+import abides_version_testing.test_config as test_config
 
 
 def generate_parameter_dict(

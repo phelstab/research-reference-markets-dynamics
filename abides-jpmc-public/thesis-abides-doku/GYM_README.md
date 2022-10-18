@@ -84,7 +84,7 @@ h/t:
 ## gym_runner 
 - l11 #TODO: GOOD EXAMPLE OF HOW TO DO REGISTRATION : https://github.com/openai/gym-soccer
 - l43     #todo: probably better way to register event: see the original medium
-- l44 # todo: the mothod here was found: https://github.com/ray-project/ray/blob/master/rllib/examples/custom_env.py
+- l44 # todo: the method here was found: https://github.com/ray-project/ray/blob/master/rllib/examples/custom_env.py
 
 
 ## abides_gym ( the main one)

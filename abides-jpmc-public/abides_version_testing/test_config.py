@@ -29,7 +29,7 @@ import sys
 
 sys.path.insert(0, root_path_abides)
 
-import version_testing.runasof as runasof
+import abides_version_testing.runasof as runasof
 
 
 # TODO: use different end time in the new config
