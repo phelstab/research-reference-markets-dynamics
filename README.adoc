@@ -15,6 +15,12 @@
 
 Description
 
+- anschauen wie ein agent funktioniert
+	- anschauen wie man einen agenten programmiert
+
+- anschauen wie man ein market experiment evaluiert
+	- plotten
+	- l3 data plotten
 
 == Test
 

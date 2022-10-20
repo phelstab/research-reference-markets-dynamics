@@ -757,6 +757,13 @@ class TradingAgent(FinancialAgent):
         logger.debug(f"Received notification of execution for: {order}")
 
         if self.log_orders:
+            """
+            Logging order execution and calulating market fee for stock exchange
+            """
+            market_fee = {
+                "fee": self.calculate_market_fee(order.quantity, order.fill_price)
+            }
+            self.logEvent("MARKET_FEE", market_fee, deepcopy_event=False)
             self.logEvent("ORDER_EXECUTED", order.to_dict(), deepcopy_event=False)
 
         # At the very least, we must update CASH and holdings at execution time.
@@ -772,7 +779,11 @@ class TradingAgent(FinancialAgent):
             del self.holdings[sym]
 
         # As with everything else, CASH holdings are in CENTS.
+        # Update the cash balance with filled price * quantity (in cents)
         self.holdings["CASH"] -= qty * order.fill_price
+
+        #marketfee_update = (order.fill_price * order.quantity) * 0.0095
+        #self.logEvent("MARKET_FEE", marketfee_update)
 
         # If this original order is now fully executed, remove it from the open orders list.
         # Otherwise, decrement by the quantity filled just now.  It is _possible_ that due
@@ -1240,3 +1251,24 @@ class TradingAgent(FinancialAgent):
         h += "{}: {}".format("CASH", holdings["CASH"])
         h = "{ " + h + " }"
         return h
+
+
+    def calculate_order_volume(self, quantity, price) -> int:
+        """
+        Calculates the market fee for the current order.
+        """
+        return quantity * price
+
+    def calculate_market_fee(self, quantity, price) -> int:
+        """
+        Calculates the market fee for the current order.
+        """
+        volume = self.calculate_order_volume(quantity, price)
+        if(volume < 110_001):
+            return 0
+        else:
+            fee = volume * 0.0095
+            if(fee < 1190):
+                return fee
+            else:
+                return 1190
