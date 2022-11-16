@@ -50,7 +50,6 @@ from .exchange_agent import ExchangeAgent
 
 logger = logging.getLogger(__name__)
 
-
 class TradingAgent(FinancialAgent):
     """
     The TradingAgent class (via FinancialAgent, via Agent) is intended as the

@@ -1,0 +1,16 @@
+,Holdings @ last mid price == volume,,,,,,,,,,
+Mark to market,2780 ABM @ 100034 == 278094520,,,,,,,,,,
+m2m volume,278094520,,,,,Step 1,Wie errechnet sich mark to market ?,,,,
+,,,,,,Step 2,Wie errechnet sich marked to market ?,,,,
+,,,,,,,,,,,
+cash position,-269292416,,,,,,,,,,
+,m2m volume + cash position,,,,,,,,,,
+Marked to market,8802104,,,,,,,,,,
+Starting cash,10000000,,,,,,,,,,
+,,,,,,,,,,Step 1,Nach jeder order execution marked to market errechnen 
+Gewinn,-1197896,cents,,,,,,,,Step 2,Wert abziehen von starting cash
+,,,,,,,,,,Step 3,Wert reporten
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,278094520,,,,,,,,,,

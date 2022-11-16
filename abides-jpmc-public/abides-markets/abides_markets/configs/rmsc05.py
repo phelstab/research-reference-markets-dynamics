@@ -4,6 +4,7 @@
 # - 102   Value Agents
 # - 12    Momentum Agents
 # - 1000  Noise Agents
+# - 1    Fundamental Tracking Agent
 
 import os
 from datetime import datetime
@@ -13,11 +14,12 @@ import pandas as pd
 
 from abides_core.utils import get_wake_time, str_to_ns
 from abides_markets.agents import (
-    ExchangeAgent,
-    NoiseAgent,
-    ValueAgent,
-    AdaptiveMarketMakerAgent,
-    MomentumAgent,
+    NewExchangeAgent,
+    NewNoiseAgent,
+    NewValueAgent,
+    NewAdaptiveMarketMakerAgent,
+    NewMomentumAgent,
+    NewFundamentalTrackingAgent,
 )
 from abides_markets.models import OrderSizeModel
 from abides_markets.oracles import SparseMeanRevertingOracle
@@ -142,7 +144,7 @@ def build_config(
 
     agents.extend(
         [
-            ExchangeAgent(
+            NewExchangeAgent(
                 id=0,
                 name="EXCHANGE_AGENT",
                 type="ExchangeAgent",
@@ -166,7 +168,24 @@ def build_config(
 
     agents.extend(
         [
-            NoiseAgent(
+            NewFundamentalTrackingAgent(
+                id=j,
+                name="FUNDAMENTAL_TRACKING_AGENT",
+                type="FundamentalTrackingAgent",
+                random_state=np.random.RandomState(
+                                        seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
+                                    ),
+                symbol=ticker,
+            )
+            for j in range(agent_count, agent_count + 1)
+        ]
+    )
+    agent_types.extend("FundamentalTrackingAgent")
+    agent_count += 1
+
+    agents.extend(
+        [
+            NewNoiseAgent(
                 id=j,
                 name="NoiseAgent {}".format(j),
                 type="NoiseAgent",
@@ -187,7 +206,7 @@ def build_config(
 
     agents.extend(
         [
-            ValueAgent(
+            NewValueAgent(
                 id=j,
                 name="Value Agent {}".format(j),
                 type="ValueAgent",
@@ -211,7 +230,7 @@ def build_config(
 
     agents.extend(
         [
-            AdaptiveMarketMakerAgent(
+            NewAdaptiveMarketMakerAgent(
                 id=j,
                 name="ADAPTIVE_POV_MARKET_MAKER_AGENT_{}".format(j),
                 type="AdaptivePOVMarketMakerAgent",
@@ -242,7 +261,7 @@ def build_config(
 
     agents.extend(
         [
-            MomentumAgent(
+            NewMomentumAgent(
                 id=j,
                 name="MOMENTUM_AGENT_{}".format(j),
                 type="MomentumAgent",

@@ -12,7 +12,9 @@ from .trading_agent import TradingAgent
 
 
 logger = logging.getLogger(__name__)
-
+#logger.setLevel(logging.DEBUG)
+#file_handler = logging.FileHandler(filename='NoiseAgent.log')
+#logger.addHandler(file_handler)
 
 class NoiseAgent(TradingAgent):
     """
@@ -78,6 +80,8 @@ class NoiseAgent(TradingAgent):
         else:
             # Print end of day valuation.
             H = int(round(self.get_holdings(self.symbol), -2) / 100)
+            #H = int(self.get_holdings(self.symbol))
+
 
             if bid and ask:
                 rT = int(bid + ask) / 2
