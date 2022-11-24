@@ -1,28 +1,244 @@
+//### own attributes ###
+:ComponentName: ABIDES
+:SystemName: (agent-based interactive discrete event simulation) - experiments
+
+
+//### Asciidoc attributes ####
+
 :toc: preamble
 :doctype: book
 :encoding: utf-16
 :lang: de
-:toclevels: 2
+:numbered: 
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
 :icons: font
 :hardbreaks:
 :nofooter:
+
 :imagesdir: 1images/
+:logo: image:hft.png[100,100] 
 
 
-:toc-title:
+:title-logo-image: {logo}
 
-= ABIDES (agent-based interactive discrete event simulation)
+:toc-title: Table of contents
 
-TODO's:
+// Formats source code samples starting with [source, xml] .... code .... 
+:source-highlighter: highlight.js
+
+// Do not make any changes here!
+
+= {ComponentName} / {SystemName} 
 
 
-== Test
+{logo}
 
+// Do not make any changes here!
 
+Document information
 [cols="1,1"]
 |===
-|Test
-|value
+|Document Type{set:cellbgcolor:#b32929}
+|Concept{set:cellbgcolor:none}
 
+|Author{set:cellbgcolor:#b32929}
+|Paul H. {set:cellbgcolor:none}
+
+|Target groups{set:cellbgcolor:#b32929}
+|Financial Scientists{set:cellbgcolor:none}
+
+|Status{set:cellbgcolor:#b32929}
+|Work in progress{set:cellbgcolor:none}
+
+|Classification of Information{set:cellbgcolor:#b32929}
+|Open Source{set:cellbgcolor:none}
+
+|Location{set:cellbgcolor:#b32929}
+|GitHub{set:cellbgcolor:none}
 |===
 
+
+Change History
+[cols="1,1,1,1"]
+|===
+|Version{set:cellbgcolor:#b32929}
+|Date{set:cellbgcolor:#b32929}
+|Author{set:cellbgcolor:#b32929}
+|Change{set:cellbgcolor:#b32929}
+
+|1.0 {set:cellbgcolor:none}
+|24.11.2022
+|phelstab
+|init
+|===
+
+
+References
+[cols="1,1,1"]
+|===
+|Title {set:cellbgcolor:#b32929}
+|DOI{set:cellbgcolor:#b32929}
+|Source {set:cellbgcolor:#b32929}
+
+|Explaining Agent-Based Financial Market Simulation{set:cellbgcolor:none}
+|10.48550/ARXIV.1909.11650
+|https://arxiv.org/abs/1909.11650
+
+|Towards Realistic Market Simulations: a Generative Adversarial Networks Approach
+|10.48550/ARXIV.2110.13287
+|https://arxiv.org/abs/2110.13287
+
+|ABIDES: Towards High-Fidelity Market Simulation for AI Research
+|10.48550/ARXIV.1904.12066
+|https://arxiv.org/abs/1904.12066
+
+|Explaining Agent-Based Financial Market Simulation
+|10.1145/3490354.3494433
+|https://doi.org/10.1145\%2F3490354.3494433
+
+|How to Evaluate Trading Strategies: Single Agent Market Replay or Multiple Agent Interactive Simulation?
+|10.48550/ARXIV.1906.12010
+|https://arxiv.org/abs/1906.12010
+|===
+
+
+
+== Introduction
+This bachelor thesis is divided into 4 main parts and explores the practice of observing
+reference market problems from a stock exchange perspective through “Discrete Event
+Multi-Agent Simulation” (DEMAS). The aim of this work was to fundamentally explain
+DEMAS and how complex reference market problems could be resolved through experiments. Introducing first, important terminology and background of DEMAS and a new
+”Agent-Based Interactive Discrete Event Simulator” (ABIDES). Thereafter, I want to
+examine complex reference market problems in the area of exchange market and market maker fee effects with the ABIDES framework. To address these reference market
+problems, we transfer and develop them as experiments in a customized environment
+and observe the experiments through advanced data analysis features. We conclude
+this thesis by introducing solution approaches to the previously observed experiments
+and providing stock exchanges or market makers an advanced version of ABIDES as a
+“strategic business navigation system” to challenge related reference market problems
+
+
+== ABIDES
+=== Installation
+
+```sh
+# Python 3.7 recommended
+# Update pip and create venv with example name lambda
+python -m pip install --upgrade pip
+python -m venv lambda
+
+# Activate venv on Linux
+source lambda/bin/activate
+
+# Activate venv on Windows
+.\lambda\Scripts\activate
+
+# Activate venv on mac and without and with fishshell
+source lambda/bin/activate
+. lambda/bin/activate.fish
+
+# Install libs
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Optional installs
+pip install torch
+pip install tensorboard
+pip install ipykernel
+python -m ipykernel install --user --name=lambda
+
+# Run and install in root folder
+pip install -e .
+```
+
+
+=== Conventions
+
+The following conventions are used in the document and are specially marked:
+
+[NOTE]
+*Note*
+
+[WARNING]
+*Warning*
+
+[IMPORTANT]
+*Important*
+
+#*@todo* - …#
+
+
+** Todos are marked accordingly and usually highlighted in yellow. There should be no more todos in the final version.
+
+
+// ====
+// [NOTE]
+// Example
+// ====
+// [cols="1"]
+// |===
+// |Caution:{set:cellbgcolor:#b32929}
+
+// |Lorem Ipsum{set:cellbgcolor:none}
+// |===
+
+// [cols="1"]
+// |===
+// |@todo:{set:cellbgcolor:#b32929}
+
+// |Current representation will be inserted when final version is set.{set:cellbgcolor:none}
+// |===
+
+=== Architecture
+
+[#Figure1]
+.ABIDES Overview
+image::ABIDES.png[]
+
+
+// **#Example 1(#****#<here overview diagram as PlantUML>)****:#**
+
+// [plantuml, target=diagram-classes, format=png]   
+// ....
+// class BlockProcessor
+// class DiagramBlock
+// class DitaaBlock
+// class PlantUmlBlock
+
+// BlockProcessor <|-- DiagramBlock
+// DiagramBlock <|-- DitaaBlock
+// DiagramBlock <|-- PlantUmlBlock
+// ....
+
+
+
+// #The following form of representation can be used:#
+// [#Table1]
+// .Configuration parameters
+// [cols="1,1,1,1"]
+// |===
+// |Parameter{set:cellbgcolor:#b32929}
+// |Value rangeExpression{set:cellbgcolor:#b32929}
+// |Intend {set:cellbgcolor:#b32929}
+// |Example {set:cellbgcolor:#b32929}
+
+// |MinMaxParameter{set:cellbgcolor:none}
+// |-1 to 9999{set:cellbgcolor:none}
+// |Used in the [Component] for setting the lower / upper limit. The separator between minimum and maximum is the pipe symbol ‚\|‘{set:cellbgcolor:none}
+// |<MinMaxParameter>1\|999</MinMaxParameter>{set:cellbgcolor:none}
+
+// |{set:cellbgcolor:none}
+// |{set:cellbgcolor:none}
+// |{set:cellbgcolor:none}
+// |{set:cellbgcolor:none}
+// |===
+
+
+== Appendix
+
+**List of Figures**
+Figure 1: <<Figure1>>
+
+**List of tables**
+// Table 1: <<Table1>>
