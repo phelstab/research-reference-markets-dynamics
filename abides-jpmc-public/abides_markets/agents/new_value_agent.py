@@ -141,7 +141,8 @@ class NewValueAgent(NewTradingAgent):
             self.state = "AWAITING_SPREAD"
             return
 
-        self.cancel_all_orders()
+        self.cancel_all_orders(exchange_id=0)
+        self.cancel_all_orders(exchange_id=1)
 
         if type(self) == NewValueAgent:
             self.get_current_spread(self.symbol)
@@ -269,7 +270,9 @@ class NewValueAgent(NewTradingAgent):
 
         # create logic for order type (market order or limit order), and add fees to order
         if self.size > 0:
-            self.place_limit_order(self.symbol, self.size, side, p)
+            # random place order at exhcange 0 or 1 
+            exchange_id = self.random_state.randint(0, 2)
+            self.place_limit_order(self.symbol, self.size, side, p, exchange_id, tag=exchange_id)
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message

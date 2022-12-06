@@ -45,8 +45,8 @@ from ..messages.query import (
 )
 from ..orders import Order, LimitOrder, MarketOrder, Side
 from .financial_agent import FinancialAgent
+from .exchange_agent import ExchangeAgent
 from .new_exchange_agent import NewExchangeAgent
-#from .new_beta_exchange_agent import NewBetaExchangeAgent
 
 
 logger = logging.getLogger(__name__)
@@ -167,12 +167,11 @@ class NewTradingAgent(FinancialAgent):
 
         # Find an exchange with which we can place orders.  It is guaranteed
         # to exist by now (if there is one).
-        self.exchange_id: int = self.kernel.find_agents_by_type(NewExchangeAgent)[0]
-        self.exchange_id_beta: int = self.kernel.find_agents_by_type(NewExchangeAgent)[1]
+        self.exchange_id: int = self.kernel.find_agents_by_type(ExchangeAgent)[0]
+        self.exchange_id_beta: int = 1
 
         logger.debug(
             f"Agent {self.id} requested agent of type Agent.ExchangeAgent.  Given Agent ID: {self.exchange_id}",
-            #f"Agent {self.id} requested agent of type Agent.ExchangeAgent.  Given Agent ID: {self.exchange_id_beta}"
         )
 
         # Request a wake-up call as in the base Agent.
@@ -234,10 +233,14 @@ class NewTradingAgent(FinancialAgent):
 
             # Tell the exchange we want to be sent the final prices when the market closes.
             self.send_message(self.exchange_id, MarketClosePriceRequestMsg())
+            self.send_message(self.exchange_id_beta, MarketClosePriceRequestMsg())
+
 
         if self.mkt_open is None:
             # Ask our exchange when it opens and closes.
             self.send_message(self.exchange_id, MarketHoursRequestMsg())
+            self.send_message(self.exchange_id_beta, MarketClosePriceRequestMsg())
+
 
         return (self.mkt_open and self.mkt_close) and not self.mkt_closed
 
@@ -410,6 +413,7 @@ class NewTradingAgent(FinancialAgent):
         """
 
         self.send_message(self.exchange_id, QuerySpreadMsg(symbol, depth))
+        self.send_message(self.exchange_id_beta, QuerySpreadMsg(symbol, depth))
 
     def get_order_stream(self, symbol: str, length: int = 1) -> None:
         """
@@ -522,6 +526,7 @@ class NewTradingAgent(FinancialAgent):
         quantity: int,
         side: Side,
         limit_price: int,
+        exchange_id: int,
         order_id: Optional[int] = None,
         is_hidden: bool = False,
         is_price_to_comply: bool = False,
@@ -564,10 +569,12 @@ class NewTradingAgent(FinancialAgent):
 
         if order is not None:
             self.orders[order.order_id] = deepcopy(order)
-            self.send_message(self.exchange_id, LimitOrderMsg(order))
+            self.send_message(exchange_id, LimitOrderMsg(order))
+            __order = order.to_dict()
+            __order["exchange_id"] = order.tag
 
             if self.log_orders:
-                self.logEvent("ORDER_SUBMITTED", order.to_dict(), deepcopy_event=False)
+                self.logEvent("ORDER_SUBMITTED", __order, deepcopy_event=False)
 
     def place_market_order(
         self,
@@ -663,7 +670,11 @@ class NewTradingAgent(FinancialAgent):
             self.send_message_batch(self.exchange_id, messages)
 
     def cancel_order(
-        self, order: LimitOrder, tag: Optional[str] = None, metadata: dict = {}
+        self, 
+        order: LimitOrder, 
+        exchange_id: int,
+        tag: Optional[str] = None, 
+        metadata: dict = {},
     ) -> None:
         """
         Used by derived classes of TradingAgent to cancel a limit order.
@@ -677,20 +688,20 @@ class NewTradingAgent(FinancialAgent):
         """
 
         if isinstance(order, LimitOrder):
-            self.send_message(self.exchange_id, CancelOrderMsg(order, tag, metadata))
+            self.send_message(exchange_id, CancelOrderMsg(order, tag, metadata))
             if self.log_orders:
                 self.logEvent("CANCEL_SUBMITTED", order.to_dict(), deepcopy_event=False)
         else:
             warnings.warn(f"Order {order} of type, {type(order)} cannot be cancelled")
 
-    def cancel_all_orders(self):
+    def cancel_all_orders(self, exchange_id: int):
         """
         Cancels all current limit orders held by this agent.
         """
 
         for order in self.orders.values():
             if isinstance(order, LimitOrder):
-                self.cancel_order(order)
+                self.cancel_order(order, exchange_id)
 
     def partial_cancel_order(
         self,
@@ -763,7 +774,7 @@ class NewTradingAgent(FinancialAgent):
         Arguments:
             order: The order that has been executed by the exchange.
         """
-
+        
         logger.debug(f"Received notification of execution for: {order}")
 
         if self.log_orders:
@@ -774,7 +785,9 @@ class NewTradingAgent(FinancialAgent):
             #    "fee": self.calculate_market_fee(order.quantity, order.fill_price)
             #}
             #self.logEvent("MARKET_FEE", market_fee, deepcopy_event=False)
-            self.logEvent("ORDER_EXECUTED", order.to_dict(), deepcopy_event=False)
+            __order = order.to_dict()
+            __order["exchange_id"] = order.tag
+            self.logEvent("ORDER_EXECUTED", __order, deepcopy_event=False)
 
 
         # At the very least, we must update CASH and holdings at execution time.
@@ -815,9 +828,7 @@ class NewTradingAgent(FinancialAgent):
 
         self.logEvent("HOLDINGS_UPDATED", self.holdings)
 
-        """
-        Print a snapshot of agents portfolio after the every order execution
-        """
+        # Print a snapshot of agents portfolio after the every order execution
         depot = {
             "current_holdings": self.holdings, # holdings in the agents depot [cash & positions]
             "current_cash": self.holdings["CASH"], # cash in the agents depot

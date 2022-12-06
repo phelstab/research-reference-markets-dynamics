@@ -133,6 +133,7 @@ class NewMomentumAgent(NewTradingAgent):
                             quantity=self.size,
                             side=Side.BID,
                             limit_price=ask,
+                            exchange_id=0,
                         )
                     else:
                         self.place_limit_order(
@@ -140,6 +141,7 @@ class NewMomentumAgent(NewTradingAgent):
                             quantity=self.size,
                             side=Side.ASK,
                             limit_price=bid,
+                            exchange_id=0,
                         )
 
 
