@@ -18,6 +18,9 @@ from .new_noise_agent import NewNoiseAgent
 from .new_trading_agent import NewTradingAgent
 from .new_fundamental_tracking_agent import NewFundamentalTrackingAgent
 
+
+from .value_agent_rscm06_light import ValueAgentLight
+
 #from .new_beta_trading_agent import NewBetaTradingAgent
 
 

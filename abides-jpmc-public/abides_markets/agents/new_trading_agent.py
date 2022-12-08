@@ -353,7 +353,7 @@ class NewTradingAgent(FinancialAgent):
                 self.mkt_closed = True
 
             self.query_spread(
-                message.symbol, message.last_trade, message.bids, message.asks, ""
+                message.symbol, message.last_trade, sender_id, message.bids, message.asks, ""
             )
 
         elif isinstance(message, QueryOrderStreamResponseMsg):
@@ -401,7 +401,11 @@ class NewTradingAgent(FinancialAgent):
         self.send_message(self.exchange_id, QueryLastTradeMsg(symbol))
 
 
-    def get_current_spread(self, symbol: str, depth: int = 1) -> None:
+    def get_current_spread(self, 
+                            symbol: str, 
+                            exchange_id: int,
+                            depth: int = 1,
+                            ):
         """
         Used by any Trading Agent subclass to query the current spread for a symbol.
 
@@ -411,11 +415,11 @@ class NewTradingAgent(FinancialAgent):
             symbol: The symbol to query.
             depth:
         """
+        self.send_message(exchange_id, QuerySpreadMsg(symbol, depth))
 
-        self.send_message(self.exchange_id, QuerySpreadMsg(symbol, depth))
-        self.send_message(self.exchange_id_beta, QuerySpreadMsg(symbol, depth))
-
-    def get_order_stream(self, symbol: str, length: int = 1) -> None:
+    def get_order_stream(self, 
+                        symbol: str, 
+                        length: int = 1) -> None:
         """
         Used by any Trading Agent subclass to query the recent order s  tream for a symbol.
 
@@ -1016,6 +1020,7 @@ class NewTradingAgent(FinancialAgent):
         self,
         symbol: str,
         price: int,
+        exchange_id: int,
         bids: List[List[Tuple[int, int]]],
         asks: List[List[Tuple[int, int]]],
         book: str,
@@ -1285,28 +1290,3 @@ class NewTradingAgent(FinancialAgent):
         h += "{}: {}".format("CASH", holdings["CASH"])
         h = "{ " + h + " }"
         return h
-
-
-    """
-        static order fee methods
-    """
-
-    def calculate_order_volume(self, quantity, price) -> int:
-        """
-        Calculates the market fee for the current order.
-        """
-        return quantity * price
-
-    def calculate_market_fee(self, quantity, price) -> int:
-        """
-        Calculates the market fee for the current order.
-        """
-        volume = self.calculate_order_volume(quantity, price)
-        if(volume < 110_001):
-            return 0
-        else:
-            fee = volume * 0.0095
-            if(fee < 1190):
-                return fee
-            else:
-                return 1190
