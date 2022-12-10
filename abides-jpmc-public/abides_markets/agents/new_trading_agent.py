@@ -70,10 +70,6 @@ class NewTradingAgent(FinancialAgent):
         random_state: Optional[np.random.RandomState] = None,
         starting_cash: int = 100000,
         log_orders: bool = False,
-        fees_paid: int = 0,
-        order_fee_static: bool = False,
-        order_fee_var: bool = False,
-        order_fee_spread: bool = False,
     ) -> None:
         # Base class init.
         super().__init__(id, name, type, random_state)

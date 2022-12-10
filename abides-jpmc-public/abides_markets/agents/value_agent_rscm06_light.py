@@ -291,15 +291,27 @@ class ValueAgentLight(NewTradingAgent):
 
             # check if all orders are not null
             if best_bid_ex0 is not None and best_ask_ex0 is not None and best_bid_ex1 is not None and best_ask_ex1 is not None:
-                print("best_bid_ex0: ", best_bid_ex0)
-                print("best_ask_ex0: ", best_ask_ex0)
-                print("best_bid_ex1: ", best_bid_ex1)
-                print("best_ask_ex1: ", best_ask_ex1)
+                # print("best_bid_ex0: ", best_bid_ex0)
+                # print("best_ask_ex0: ", best_ask_ex0)
+                # print("best_bid_ex1: ", best_bid_ex1)
+                # print("best_ask_ex1: ", best_ask_ex1)
+                print("order size: ", self.size)
                 
         
             # TODO model erweitern um die fees auch zu berücksichtigen
-            exchange_id = self.exchange_fee_decision_model(side, best_bid_ex0, best_ask_ex0, best_bid_ex1, best_ask_ex1)
-            self.place_limit_order(self.symbol, self.size, side, p, exchange_id, tag=exchange_id)
+            exchange_id = self.exchange_fee_decision_model(fee0=0,
+                                                        fee1=0,
+                                                        side=side,
+                                                        bb0=best_bid_ex0,
+                                                        ba0=best_ask_ex0,
+                                                        bb1=best_bid_ex1,
+                                                        ba1=best_ask_ex1)
+
+            self.place_limit_order(symbol=self.symbol,
+                                    quantity=self.size,
+                                    side=side,
+                                    limit_price=p,
+                                    exchange_id=exchange_id)
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message
@@ -356,22 +368,22 @@ class ValueAgentLight(NewTradingAgent):
         check if all prices are not none else flip a coin if exchanges have equal prices flip a coin
     """
     def exchange_fee_decision_model(self, fee0, fee1, side, bb0, ba0, bb1, ba1) -> int:
-        if bb0 is not None and ba0 is not None and bb1 is not None and ba1 is not None:
-            if side == Side.BID:
-                if bb0 < bb1:
-                    return 0
-                elif bb0 > bb1:
-                    return 1
-                else:
-                    return self.random_state.randint(0, 2)
-            else: 
-                if ba0 < ba1:
-                    return 0
-                elif ba0 > ba1:
-                    return 1
-                else:
-                    return self.random_state.randint(0, 2)
-        else:
-            return self.random_state.randint(0, 2)
+        # if bb0 is not None and ba0 is not None and bb1 is not None and ba1 is not None:
+        #     if side == Side.BID:
+        #         if bb0 < bb1:
+        #             return 0
+        #         elif bb0 > bb1:
+        #             return 1
+        #         else:
+        #             return self.random_state.randint(0, 2)
+        #     else: 
+        #         if ba0 < ba1:
+        #             return 0
+        #         elif ba0 > ba1:
+        #             return 1
+        #         else:
+        #             return self.random_state.randint(0, 2)
+        # else:
+        return self.random_state.randint(0, 2)
 
 
