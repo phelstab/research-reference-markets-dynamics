@@ -571,7 +571,8 @@ class NewTradingAgent(FinancialAgent):
             self.orders[order.order_id] = deepcopy(order)
             self.send_message(exchange_id, LimitOrderMsg(order))
             __order = order.to_dict()
-            __order["exchange_id"] = order.tag
+            __order["exchange_id"] = exchange_id
+            order.tag = exchange_id
 
             if self.log_orders:
                 self.logEvent("ORDER_SUBMITTED", __order, deepcopy_event=False)
