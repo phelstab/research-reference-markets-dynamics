@@ -123,22 +123,33 @@ and providing stock exchanges or market makers an advanced version of ABIDES as 
 === Installation
 
 ```sh
-# Python 3.7.9 or 3.9.13 recommended or any Version > 3.7
-# Check current python version
-python --version
+# Python 3.7.9 or 3.9.13 recommended
+# Update pip and create venv with example name lambda
+python -m pip install --upgrade pip
+python -m venv lambda
 
-# If python wrong version or incorrect version is enabled (on Linux / Mac)
-alias python=python3.7
-# or set correct python version to the top at the Win11/10 environment variables path
+# Activate venv on Linux
+source lambda/bin/activate
 
-# Install on Mac, Linux or any Unix based system
-sh easy_install_unix.sh
+# Activate venv on Windows
+.\lambda\Scripts\activate
 
-# Install on Mac, Linux or any Unix based system
-sh easy_install_windows.sh
+# Activate venv on mac and without and with fishshell
+source lambda/bin/activate
+. lambda/bin/activate.fish
 
-# Go to 000_experiments and try running a test experiment
-python rmsc06_light.py
+# Install libs
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Optional installs
+pip install torch
+pip install tensorboard
+pip install ipykernel
+python -m ipykernel install --user --name=lambda
+
+# Run and install in root folder
+pip install -e .
 ```
 
 
