@@ -6,5 +6,16 @@ psutil==5.8.0
 ray[rllib]==1.7.0
 scipy==1.7.0
 tqdm==4.61.1
+p_tqdm==1.3.3
+pre-commit==2.13
+pytest==6.2.4
+pytest-cov==2.12.1
+sphinx==3.5.4
+sphinx-autodoc-typehints==1.12.0
+sphinx-book-theme==0.0.42
+dash
+dash-bootstrap-components
+Flask
 termcolor
 coloredlogs
+Pillow
