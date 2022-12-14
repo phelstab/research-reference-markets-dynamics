@@ -13,10 +13,10 @@ import datetime
 
 from abides_core import abides
 from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
-from abides_markets.configs import rmsc06LIGHT
+from abides_markets.configs import rmsc05HIGH
 
-config = rmsc06LIGHT.build_config(
-    end_time="10:00:00"
+config = rmsc05HIGH.build_config(
+    end_time="15:00:00"
 )
 
 config.keys()
@@ -362,7 +362,6 @@ app.layout = html.Div(
 )
 
 app._favicon = ('icon.ico')
-
 
 # Run the app
 app.run_server(debug=False)

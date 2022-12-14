@@ -24,7 +24,7 @@ from abides_markets.utils import generate_latency_model
 
 
 def build_config(
-    seed=int(datetime.now().timestamp() * 1_000_000) % (2 ** 32 - 1),
+    seed=999999,
     date="20210205",
     end_time="10:00:00",
     stdout_log_level="INFO",

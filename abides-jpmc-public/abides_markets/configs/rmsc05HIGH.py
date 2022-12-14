@@ -1,10 +1,7 @@
-# RMSC-5 (Reference Market Simulation Configuration):
-# - 1     Exchange Agent
-# - 2     Adaptive Market Maker Agents
-# - 102   Value Agents
-# - 12    Momentum Agents
-# - 1000  Noise Agents
-# - 1    Fundamental Tracking Agent
+# RMSC-6-LIGHT (Reference Market Simulation Configuration):
+# - 2     Exchanges
+# - 204   Value Agents
+# - 2 pro Exchange Market Maker Agents
 
 import os
 from datetime import datetime
@@ -16,11 +13,9 @@ from abides_core.utils import get_wake_time, str_to_ns
 from abides_markets.agents import (
     ExchangeAgent,
     NewExchangeAgent,
-    NewNoiseAgent,
-    NewValueAgent,
-    NewAdaptiveMarketMakerAgent,
-    NewMomentumAgent,
-    NewFundamentalTrackingAgent,
+    ValueAgentLight,
+    AdaptiveMarketMakerAgent0,
+    AdaptiveMarketMakerAgent1,
 )
 from abides_markets.models import OrderSizeModel
 from abides_markets.oracles import SparseMeanRevertingOracle
@@ -32,7 +27,8 @@ from abides_markets.utils import generate_latency_model
 
 
 def build_config(
-    seed=int(datetime.now().timestamp() * 1_000_000) % (2 ** 32 - 1),
+    #seed=int(datetime.now().timestamp() * 1_000_000) % (2 ** 32 - 1),
+    seed=999999,
     date="20210205",
     end_time="10:00:00",
     stdout_log_level="INFO",
@@ -71,8 +67,6 @@ def build_config(
     mm_spread_alpha=0.75,
     mm_backstop_quantity=0,
     mm_cancel_limit_delay=50,  # 50 nanoseconds
-    # 5) Momentum Agents
-    num_momentum_agents=12,
 ):
     """
     create the background configuration for rmsc04
@@ -144,25 +138,25 @@ def build_config(
     agent_count, agents, agent_types = 0, [], []
 
     agents.extend(
-        [
-            ExchangeAgent(
-                id=0,
-                name="EXCHANGE_AGENT",
-                type="ExchangeAgent",
-                mkt_open=MKT_OPEN,
-                mkt_close=MKT_CLOSE,
-                symbols=[ticker],
-                book_logging=book_logging,
-                book_log_depth=book_log_depth,
-                log_orders=exchange_log_orders,
-                pipeline_delay=0,
-                computation_delay=0,
-                stream_history=stream_history_length,
-                random_state=np.random.RandomState(
-                    seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
-                ),
-            )
-        ]
+    [
+        ExchangeAgent(
+            id=0,
+            name="EXCHANGE_AGENT",
+            type="ExchangeAgent",
+            mkt_open=MKT_OPEN,
+            mkt_close=MKT_CLOSE,
+            symbols=[ticker],
+            book_logging=book_logging,
+            book_log_depth=book_log_depth,
+            log_orders=exchange_log_orders,
+            pipeline_delay=0,
+            computation_delay=0,
+            stream_history=stream_history_length,
+            random_state=np.random.RandomState(
+                seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
+            ),
+        )
+    ]
     )
     agent_types.extend("ExchangeAgent")
     agent_count += 1
@@ -196,22 +190,6 @@ def build_config(
     agent_types.extend("NewExchangeAgent")
     agent_count += 1
 
-    # agents.extend(
-    #     [
-    #         NewFundamentalTrackingAgent(
-    #             id=j,
-    #             name="FUNDAMENTAL_TRACKING_AGENT",
-    #             type="FundamentalTrackingAgent",
-    #             random_state=np.random.RandomState(
-    #                                     seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
-    #                                 ),
-    #             symbol=ticker,
-    #         )
-    #         for j in range(agent_count, agent_count + 1)
-    #     ]
-    # )
-    # agent_types.extend("FundamentalTrackingAgent")
-    # agent_count += 1
 
     # agents.extend(
     #     [
@@ -232,11 +210,11 @@ def build_config(
     #     ]
     # )
     # agent_count += num_noise_agents
-    agent_types.extend(["NoiseAgent"])
+    #agent_types.extend(["NoiseAgent"])
 
     agents.extend(
         [
-            NewValueAgent(
+            ValueAgentLight(
                 id=j,
                 name="Value Agent {}".format(j),
                 type="ValueAgent",
@@ -258,36 +236,67 @@ def build_config(
     agent_count += num_value_agents
     agent_types.extend(["ValueAgent"])
 
-    # agents.extend(
-    #     [
-    #         NewAdaptiveMarketMakerAgent(
-    #             id=j,
-    #             name="ADAPTIVE_POV_MARKET_MAKER_AGENT_{}".format(j),
-    #             type="AdaptivePOVMarketMakerAgent",
-    #             symbol=ticker,
-    #             starting_cash=starting_cash,
-    #             pov=MM_PARAMS[idx][1],
-    #             min_order_size=MM_PARAMS[idx][4],
-    #             window_size=MM_PARAMS[idx][0],
-    #             num_ticks=MM_PARAMS[idx][2],
-    #             wake_up_freq=MM_PARAMS[idx][3],
-    #             poisson_arrival=True,
-    #             cancel_limit_delay=mm_cancel_limit_delay,
-    #             skew_beta=mm_skew_beta,
-    #             price_skew_param=mm_price_skew,
-    #             level_spacing=mm_level_spacing,
-    #             spread_alpha=mm_spread_alpha,
-    #             backstop_quantity=mm_backstop_quantity,
-    #             log_orders=log_orders,
-    #             random_state=np.random.RandomState(
-    #                 seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
-    #             ),
-    #         )
-    #         for idx, j in enumerate(range(agent_count, agent_count + NUM_MM))
-    #     ]
-    # )
-    # agent_count += NUM_MM
-    # agent_types.extend("POVMarketMakerAgent")
+    agents.extend(
+        [
+            AdaptiveMarketMakerAgent0(
+                id=j,
+                name="ADAPTIVE_POV_MARKET_MAKER_AGENT_0_{}".format(j),
+                type="AdaptivePOVMarketMakerAgent0",
+                symbol=ticker,
+                starting_cash=starting_cash,
+                pov=MM_PARAMS[idx][1],
+                min_order_size=MM_PARAMS[idx][4],
+                window_size=MM_PARAMS[idx][0],
+                num_ticks=MM_PARAMS[idx][2],
+                wake_up_freq=MM_PARAMS[idx][3],
+                poisson_arrival=True,
+                cancel_limit_delay=mm_cancel_limit_delay,
+                skew_beta=mm_skew_beta,
+                price_skew_param=mm_price_skew,
+                level_spacing=mm_level_spacing,
+                spread_alpha=mm_spread_alpha,
+                backstop_quantity=mm_backstop_quantity,
+                log_orders=log_orders,
+                random_state=np.random.RandomState(
+                    seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
+                ),
+            )
+            for idx, j in enumerate(range(agent_count, agent_count + NUM_MM))
+        ]
+    )
+    agent_count += NUM_MM
+    agent_types.extend("POVMarketMakerAgent")
+
+    agents.extend(
+    [
+        AdaptiveMarketMakerAgent1(
+            id=j,
+            name="ADAPTIVE_POV_MARKET_MAKER_AGENT_1_{}".format(j),
+            type="AdaptivePOVMarketMakerAgent1",
+            symbol=ticker,
+            starting_cash=starting_cash,
+            pov=MM_PARAMS[idx][1],
+            min_order_size=MM_PARAMS[idx][4],
+            window_size=MM_PARAMS[idx][0],
+            num_ticks=MM_PARAMS[idx][2],
+            wake_up_freq=MM_PARAMS[idx][3],
+            poisson_arrival=True,
+            cancel_limit_delay=mm_cancel_limit_delay,
+            skew_beta=mm_skew_beta,
+            price_skew_param=mm_price_skew,
+            level_spacing=mm_level_spacing,
+            spread_alpha=mm_spread_alpha,
+            backstop_quantity=mm_backstop_quantity,
+            log_orders=log_orders,
+            random_state=np.random.RandomState(
+                seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
+            ),
+        )
+        for idx, j in enumerate(range(agent_count, agent_count + NUM_MM))
+    ]
+    )
+    agent_count += NUM_MM
+    agent_types.extend("POVMarketMakerAgent")
 
     # agents.extend(
     #     [

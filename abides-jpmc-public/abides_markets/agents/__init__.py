@@ -25,3 +25,6 @@ from .value_agent_rscm06_light import ValueAgentLight
 
 
 from .market_makers.new_adaptive_market_maker_agent import NewAdaptiveMarketMakerAgent
+
+from .market_makers.adaptive_market_maker_agent_0 import AdaptiveMarketMakerAgent0
+from .market_makers.adaptive_market_maker_agent_1 import AdaptiveMarketMakerAgent1

@@ -16,7 +16,7 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc06LIGHT
 
 config = rmsc06LIGHT.build_config(
-    end_time="10:00:00"
+    end_time="15:00:00"
 )
 
 config.keys()
