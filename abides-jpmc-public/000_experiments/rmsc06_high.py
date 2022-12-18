@@ -16,7 +16,7 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc05HIGH
 
 config = rmsc05HIGH.build_config(
-    end_time="15:00:00"
+    end_time="10:00:00"
 )
 
 config.keys()
@@ -24,6 +24,7 @@ end_state = abides.run(config)
 
 logs_df = parse_logs_df( end_state )
 
+logs_df.to_csv("logs_df.csv")
 
 """
     Get the Order book from the Exchange 0.

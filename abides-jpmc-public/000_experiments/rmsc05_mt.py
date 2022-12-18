@@ -1,0 +1,292 @@
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+
+# Web Dash
+from flask import Flask
+import dash
+from dash import dcc, html
+import dash_bootstrap_components as dbc
+import plotly.express as px
+import plotly.graph_objects as go
+import datetime
+
+from abides_core import abides
+from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
+from abides_markets.configs import rmsc05MT
+
+config = rmsc05MT.build_config(
+    end_time="10:00:00",
+    seed=1337,
+)
+
+config.keys()
+end_state = abides.run(config)
+
+logs_df = parse_logs_df( end_state )
+
+"""
+    Get the Order book from the Exchange 0.
+"""
+Ex_0_order_book = end_state["agents"][0].order_books["ABM"]
+ex_0_name = Ex_0_order_book.owner.name
+ex_0_ob_imbalance = Ex_0_order_book.get_imbalance()
+Ex_0_L1 = Ex_0_order_book.get_L1_snapshots()
+Ex_0_L2 = Ex_0_order_book.get_L2_snapshots(nlevels=10)
+
+"""
+    Agents Treemap Plotting
+"""
+def format_my_nanos(nanos):
+    dt = datetime.datetime.fromtimestamp(nanos / 1e9)
+    return '{}{:03.0f}'.format(dt.strftime('%H:%M:%S.%f'), nanos % 1e3)
+
+def adjust_timestamps(level2Data) -> list:
+    times = [ t - ns_date(t) for t in level2Data['times']]
+    tt = []
+    for t in times:
+        if(format_my_nanos(t) in tt):
+            continue
+        else:
+            tt.append(format_my_nanos(t))
+    return tt
+
+def prepare_orderbook_dataframe(level2Data) -> pd.DataFrame:
+    values = []
+    tt = adjust_timestamps(level2Data)
+    for x in range(0, len(tt)):
+        bid_vol = []
+        v1 = {'axes': 0, 'group': 0, 'time': tt[x], 'vol': 0, 'price': level2Data["bids"][x][0][0]/100}
+        values.append(v1)
+        for i in range(0, 10):
+            bid_vol.append(level2Data["bids"][x][i][1])
+            v1 = {'axes': 0, 'group': 1+i, 'time': tt[x], 'vol': np.cumsum(bid_vol)[i], 'price': level2Data["bids"][x][i][0]/100}
+            values.append(v1)
+        v2 = {'axes': 1, 'group': 11, 'time': tt[x], 'vol': 0, 'price': level2Data["asks"][x][0][0]/100}
+        values.append(v2)
+        ask_vol = []
+        for z in range(0,10):
+            ask_vol.append(level2Data["asks"][x][z][1])
+            v2 = {'axes': 1, 'group': 12+z, 'time': tt[x], 'vol': np.cumsum(ask_vol)[z], 'price': level2Data["asks"][x][z][0]/100}
+            values.append(v2)
+    return pd.DataFrame(values)
+
+Ex_0_orderbook = (px.line(prepare_orderbook_dataframe(Ex_0_L2)[0:40_000], 
+            x='price',
+            y='vol', 
+            animation_frame='time', 
+            animation_group='time', 
+            color='axes',
+            title='Order book depth chart of Exchange 0',
+            range_x=[999, 1001],
+            range_y=[0, 1100],
+            labels={'price': 'Price', 
+                    'time': 'Time', 
+                    'axes': 'Sides:',
+                    'vol': 'Cumulative Ordervolume',
+                 },   
+            ))
+
+newnames = {'0':'bids (buyers)', 
+            '1': 'asks (sellers)',
+            }
+Ex_0_orderbook.for_each_trace(lambda t: t.update(name = newnames[t.name],
+                                      legendgroup = newnames[t.name],
+                                      hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
+                                     )
+                  )
+
+for f in Ex_0_orderbook.frames:
+    try:
+        f.data[0].update(mode='lines+markers')
+        f.data[1].update(mode='lines+markers')
+    except:
+        pass
+    try:
+        f.data[0].update(line_shape='hvh')
+        f.data[1].update(line_shape='hvh')
+    except:
+        pass
+    try:
+        f.data[0].update(fill='tozeroy')
+        f.data[1].update(fill='tozeroy')
+    except:
+        pass
+    try:
+        f.data[0].update(line_color='#63ad69')
+        f.data[1].update(line_color='#db3939')
+    except:
+        pass
+
+
+Ex_0_orderbook.data[0].line.color = '#63ad69'
+Ex_0_orderbook.data[1].line.color = '#db3939'
+
+
+"""
+    Agents Treemap Plotting
+"""
+def get_treemap_df_end(logs_df) -> pd.DataFrame:
+    df_end = logs_df[logs_df['EventType'] == 'ENDING_CASH']
+    df_end.loc[:, "EndingCashAbsolut"]  = df_end["ScalarEventValue"].apply(lambda x: (((x - 10_000_000) / 100)))
+    df_end.loc[:, "EndingCashPercentage"]  = df_end["ScalarEventValue"].apply(lambda x: round(((x - 10_000_000) / (10_000_000)), 3) * 100)
+    df_end.loc[:, "PnL"]  = df_end["ScalarEventValue"].apply(lambda x: "positive" if (x - 10_000_000) > 0 else ("equal" if ((x - 10_000_000) == 0) else "negative"))
+    df_end.loc[:, "PnLColor"]  = df_end["ScalarEventValue"].apply(lambda x: "#278024" if (x - 10_000_000) > 0 else ("#616161" if ((x - 10_000_000) == 0) else "#cf2d2d"))
+    df_end = df_end.reset_index()
+    return df_end
+
+def get_treemap_fig() -> go.Figure:
+    df_end = get_treemap_df_end(logs_df)
+    df_sorted = df_end.sort_values(by=['agent_id', 'agent_type'], ascending=[True,True])
+    fig = px.treemap(df_sorted,
+            title='Profits and Losses of Agents',
+            values='ScalarEventValue',
+            path=[px.Constant('Agent Types'), 'agent_type', 'agent_id'],
+            )
+    endingCashPercentage = df_sorted.EndingCashPercentage.tolist()
+    endingCashAbsolut = df_sorted.EndingCashAbsolut.tolist()
+    posnegs = df_sorted.PnLColor.tolist()
+    submittedOrders = df_sorted.SubmittedOrders.tolist()
+
+    # substract column endingCashAbsolut from column paidFees
+    paidFees = df_sorted.PaidFees.div(100)
+    endingCashMinFees = [x - y for x, y in zip(endingCashAbsolut, paidFees)]
+    paidFees = paidFees.round(2).tolist()
+
+    fig.data[0].customdata = np.column_stack([endingCashAbsolut, endingCashPercentage, paidFees, submittedOrders, endingCashMinFees])
+    fig.data[0].texttemplate = "AgentID:%{label}<br>%{value}<br>PnL Absolut:%{customdata[0]}$<br>PnL Percent:%{customdata[1]}%<br>Paid Fees:%{customdata[2]}$<br>Submitted Orders:%{customdata[3]}<br>PnL Absolut (incl. Fees):%{customdata[4]}$"
+    fig.data[0].marker.colors = posnegs
+    fig.update_traces(root_color="lightgrey")
+    fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+    # Updating the root color of the agent types
+    y = list(fig.data[0]['marker']['colors'])
+    for i in range(0, df_end['agent_type'].nunique()):
+        y.append("#4f4f4f")
+    x = tuple(y)
+    fig.data[0]['marker']['colors'] = x
+    return fig
+
+
+"""
+    Price / Timeseries Plotting
+"""
+times = [ t - ns_date(t) for t in Ex_0_L2["times"] ]
+times = list(map(int, times))
+bid_prices = Ex_0_L2["bids"][:,0,0]
+ask_prices = Ex_0_L2["asks"][:,0,0]
+bid_prices = np.divide(bid_prices, 100)
+ask_prices = np.divide(ask_prices, 100)
+Ex_0_fig = go.Figure(layout_yaxis_range =[998, 1002])
+Ex_0_fig.add_trace(go.Scatter(x=times, y=bid_prices, mode='markers', marker_size=3, name='best_bids'))
+Ex_0_fig.add_trace(go.Scatter(x=times, y=ask_prices, mode='markers', marker_size=3, name='best_asks'))
+Ex_0_fig.update_layout(title='Best Bid / Ask Prices Exchange 0', xaxis_title='Time', yaxis_title='Price')
+
+
+"""
+    Preparing Market Shares Data
+"""
+executed_orders =  logs_df[(logs_df.EventType=="ORDER_EXECUTED")]
+executed_orders = executed_orders[executed_orders.EventTime != 0]
+executed_orders = executed_orders.sort_values(by='EventTime', ascending=True)
+
+executed_orders['count'] = 1
+executed_orders['cumsum_order_qty'] = executed_orders['count'].cumsum()
+executed_orders['cumsum_qty'] = executed_orders['quantity'].cumsum()
+executed_orders['order_fee'] = executed_orders['order_fee'].div(100)
+executed_orders['cumsum_order_fee'] = executed_orders['order_fee'].cumsum()
+executed_orders.drop(columns=['count'], inplace=True)
+
+
+"""
+    Plot the Figures
+"""
+fig_executed_order = go.Figure()
+fig_executed_order.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
+fig_executed_order.update_layout(title='Executed Order Trading Volumes Over Time (ex pre-market)', xaxis_title='Time', yaxis_title='Trading Volume')
+
+fig_executed_order_qty = go.Figure()
+fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
+fig_executed_order_qty.update_layout(title='Executed Orders Quantity Over Time (ex pre-market)', xaxis_title='Time', yaxis_title='Order Quantity')
+
+fig_exchange_turnover = go.Figure()
+fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
+fig_exchange_turnover.update_layout(title='Market Fees Turnover (ex pre-market)', xaxis_title='Time', yaxis_title='Turnaround')
+
+
+
+"""
+    Prepare a web dashboard for data analysis.
+"""
+# Initiate the app
+server = Flask(__name__)
+app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])
+app.title = "ABIDES Dashboard"
+
+# Build the Components
+colors = {
+    'background': '#111111',
+    'text': '#7FDBFF'
+}
+
+ex_0_info = ex_0_name + " Orderbook Imbalance: " + str(ex_0_ob_imbalance)
+
+def exchange_0_info() -> html.Div:
+        return html.Div(
+            children=[
+                html.Span(
+                    ex_0_info,
+                    style= {'color': 'grey', 'margin-left': '25px','font-weight': 'bold', 'font-size': '22px'},
+                ),
+                html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
+                ,
+            ]
+        ) 
+
+
+Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
+
+# Design the app layout
+app.layout = html.Div(
+    [
+        dbc.Row([
+            Header_component,
+        ]),
+        dbc.Row([
+            exchange_0_info(),
+        ]),
+        
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph1', figure=get_treemap_fig(), config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph2', figure=Ex_0_fig, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph4', figure=Ex_0_orderbook, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph8', figure=fig_exchange_turnover, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph6', figure=fig_executed_order_qty, config= {'displaylogo': False}),
+            ),
+            dbc.Col(
+                dcc.Graph(id='the_graph7', figure=fig_executed_order, config= {'displaylogo': False}),
+            ),
+        ]),
+    ]
+)
+
+app._favicon = ('icon.ico')
+
+# Run the app
+app.run_server(debug=False)

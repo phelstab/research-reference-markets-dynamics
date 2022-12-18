@@ -1,1 +1,1 @@
-from .pov_execution_agent import PovExecutionAgent
+from .pov_execution_agent import POVExecutionAgent

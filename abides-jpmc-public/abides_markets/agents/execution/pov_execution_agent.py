@@ -1,9 +1,14 @@
-from typing import List, Optional
+import logging
+from math import floor, ceil
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
 from abides_core import Message, NanosecondTime
 from abides_core.utils import str_to_ns
+
+from ...utils import sigmoid
+
 
 from ...messages.marketdata import MarketDataMsg, L2SubReqMsg
 from ...messages.query import QuerySpreadResponseMsg
@@ -14,7 +19,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class POVExecutionAgent(TradingAgent):
-
+    """
+    https://algoji.com/percentage-of-volume/#:~:text=The%20Percentage%20of%20Volume%20(POV,in%20a%20given%20time%20interval.
+    
+    The Percentage of Volume (POV), also called as Participation Rate, is a simple strategy which executes the order quantity as percentage of trade volume of the stock in a given time interval.
+    Example: “Be 10% of volume”- Buy 100,000 shares at %Volume of 10 and not exceeding the price of 125.20 until order completed or market closed.
+    
+    Good for big impact 
+    """
     def __init__(
         self,
         id: int,
@@ -78,7 +90,7 @@ class POVExecutionAgent(TradingAgent):
             self.get_transacted_volume(self.symbol, lookback_period=self.look_back_period)
             self.state = 'AWAITING_TRANSACTED_VOLUME'
 
-    def getWakeFrequency(self) -> NanosecondTime:
+    def get_wake_frequency(self) -> NanosecondTime:
         delta_time = self.random_state.exponential(scale=1.0 / self.lambda_a)
         return int(round(delta_time))
 
@@ -123,27 +135,17 @@ class POVExecutionAgent(TradingAgent):
                     qty = round(self.pov * self.transacted_volume[self.symbol])
                     self.cancelOrders()
                     self.place_market_order(self.symbol, qty, self.direction == 'BUY')
-                    logger.debug(f'[---- {self.name} - {current_time} ----]: TOTAL TRANSACTED VOLUME IN THE LAST {self.look_back_period} = {self.transacted_volume[self.symbol]}')
-                    logger.debug(f'[---- {self.name} - {current_time} ----]: MARKET ORDER PLACED - {qty}')
-
-
-
 
     def handleOrderAcceptance(self, current_time, msg):
         accepted_order = msg.body['order']
         self.accepted_orders.append(accepted_order)
         accepted_qty = sum(accepted_order.quantity for accepted_order in self.accepted_orders)
-        logger.debug(f'[---- {self.name} - {current_time} ----]: ACCEPTED QUANTITY : {accepted_qty}')
 
     def handleOrderExecution(self, current_time, msg):
         executed_order = msg.body['order']
         self.executed_orders.append(executed_order)
         executed_qty = sum(executed_order.quantity for executed_order in self.executed_orders)
         self.rem_quantity = self.quantity - executed_qty
-        logger.debug(f'[---- {self.name} - {current_time} ----]: LIMIT ORDER EXECUTED - {executed_order.quantity} @ {executed_order.fill_price}')
-        logger.debug(f'[---- {self.name} - {current_time} ----]: EXECUTED QUANTITY: {executed_qty}')
-        logger.debug(f'[---- {self.name} - {current_time} ----]: REMAINING QUANTITY (NOT EXECUTED): {self.rem_quantity}')
-        logger.debug(f'[---- {self.name} - {current_time} ----]: % EXECUTED: {round((1 - self.rem_quantity / self.quantity) * 100, 2)} \n')
 
     def cancelOrders(self):
         for _, order in self.orders.items():

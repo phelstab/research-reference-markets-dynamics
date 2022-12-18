@@ -112,6 +112,7 @@ class LimitOrder(Order):
         insert_by_id: bool = False,
         is_post_only=False,
         order_id: Optional[int] = None,
+        order_fee: Optional[Any] = None,
         tag: Optional[Any] = None,
     ) -> None:
         super().__init__(
@@ -125,6 +126,7 @@ class LimitOrder(Order):
         self.is_price_to_comply: bool = is_price_to_comply
         self.insert_by_id: bool = insert_by_id
         self.is_post_only: bool = is_post_only
+        self.order_fee: Optional[Any] = order_fee
 
     def __str__(self) -> str:
         filled = ""
@@ -165,6 +167,7 @@ class LimitOrder(Order):
             self.insert_by_id,
             order_id=self.order_id,
             is_post_only=self.is_post_only,
+            order_fee=self.order_fee,
             tag=tag,
         )
 

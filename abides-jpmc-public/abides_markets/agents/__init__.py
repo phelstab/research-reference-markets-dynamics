@@ -28,3 +28,17 @@ from .market_makers.new_adaptive_market_maker_agent import NewAdaptiveMarketMake
 
 from .market_makers.adaptive_market_maker_agent_0 import AdaptiveMarketMakerAgent0
 from .market_makers.adaptive_market_maker_agent_1 import AdaptiveMarketMakerAgent1
+
+
+from .variable.var_momentum_agent import VarMomentumAgent
+from .variable.var_noise_agent import VarNoiseAgent
+from .variable.var_value_agent import VarValueAgent
+from .variable.var_adaptive_market_maker_agent import VarAdaptiveMarketMakerAgent
+from .makertaker.mt_momentum_agent import MTMomentumAgent
+from .makertaker.mt_noise_agent import MTNoiseAgent
+from .makertaker.mt_value_agent import MTValueAgent
+from .makertaker.mt_adaptive_market_maker_agent import MTAdaptiveMarketMakerAgent
+
+
+
+from .execution.pov_execution_agent import POVExecutionAgent

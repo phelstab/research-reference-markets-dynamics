@@ -11,11 +11,20 @@ import numpy as np
 from abides_core import Message, NanosecondTime
 from abides_core.utils import str_to_ns
 
-from ..messages.marketdata import MarketDataMsg, L2SubReqMsg
 from ..messages.query import QuerySpreadResponseMsg
+
+from ..messages.marketdata import (
+    MarketDataMsg,
+    L2SubReqMsg,
+    BookImbalanceSubReqMsg,
+
+)
+
 from ..orders import Side
 from .trading_agent import TradingAgent
 
+import logging
+logger = logging.getLogger(__name__)
 
 class IntermarketSpreadArbitrageMachine(TradingAgent):
     """
@@ -60,99 +69,182 @@ class IntermarketSpreadArbitrageMachine(TradingAgent):
 
         self.subscribe = subscribe  # Flag to determine whether to subscribe to data or use polling mechanism
         self.subscription_requested = False
-        self.mid_list: List[float] = []
-        self.avg_20_list: List[float] = []
-        self.avg_50_list: List[float] = []
+
         self.log_orders = log_orders
         self.state = "AWAITING_WAKEUP"
+    
+        global best_bid_ex0
+        best_bid_ex0 = None
+        global best_ask_ex0
+        best_ask_ex0 = None 
+        global best_bid_ex1
+        best_bid_ex1 = None 
+        global best_ask_ex1
+        best_ask_ex1 = None 
 
     def kernel_starting(self, start_time: NanosecondTime) -> None:
         super().kernel_starting(start_time)
 
+
     def wakeup(self, current_time: NanosecondTime) -> None:
         """Agent wakeup is determined by self.wake_up_freq"""
+        super().wakeup(current_time)
+
         can_trade = super().wakeup(current_time)
+
+        if not self.has_subscribed:
+            super().request_data_subscription(
+                BookImbalanceSubReqMsg(
+                    symbol=self.symbol,
+                    min_imbalance=self.min_imbalance,
+                )
+            )
+            self.last_time_book_order = current_time
+            self.has_subscribed = True
+
         if self.subscribe and not self.subscription_requested:
             super().request_data_subscription(
                 L2SubReqMsg(
                     symbol=self.symbol,
-                    freq=int(10e9),
-                    depth=1,
+                    freq=self.subscribe_freq,
+                    depth=self.subscribe_num_levels,
                 )
             )
             self.subscription_requested = True
-            self.state = "AWAITING_MARKET_DATA"
+            self.get_transacted_volume(self.symbol, lookback_period=self.subscribe_freq)
+            self.state = self.initialise_state()
+
+
         elif can_trade and not self.subscribe:
-            self.get_current_spread(self.symbol)
-            self.state = "AWAITING_SPREAD"
+            self.cancel_all_orders(exchange_id=0)
+            self.cancel_all_orders(exchange_id=1)
+            
+            self.get_current_spread(self.symbol, 0)
+            self.get_current_spread(self.symbol, 1)
+
+            self.get_transacted_volume(self.symbol, lookback_period=self.wake_up_freq)
+            self.initialise_state()
 
     def receive_message(
-        self, current_time: NanosecondTime, sender_id: int, message: Message
-    ) -> None:
-        """Momentum agent actions are determined after obtaining the best bid and ask in the LOB"""
+        self, current_time: NanosecondTime, sender_id: int, message: Message ) -> None:
+
         super().receive_message(current_time, sender_id, message)
+
         if (
             not self.subscribe
             and self.state == "AWAITING_SPREAD"
             and isinstance(message, QuerySpreadResponseMsg)
         ):
-            bid, _, ask, _ = self.get_known_bid_ask(self.symbol)
-            self.place_orders(bid, ask)
-            self.set_wakeup(current_time + self.get_wake_frequency())
+            if self.mkt_closed:
+                return
+            # Get the information from sender id 1 and 0
+            if sender_id == 0:
+                if message.bids:
+                    global best_bid_ex0 
+                    best_bid_ex0 = message.bids[0][0]
+                if message.asks:
+                    global best_ask_ex0
+                    best_ask_ex0 = message.asks[0][0]
+            elif sender_id == 1:
+                if message.bids:
+                    global best_bid_ex1
+                    best_bid_ex1 = message.bids[0][0]
+                if message.asks:
+                    global best_ask_ex1
+                    best_ask_ex1 = message.asks[0][0]
+            
             self.state = "AWAITING_WAKEUP"
+
         elif (
             self.subscribe
             and self.state == "AWAITING_MARKET_DATA"
             and isinstance(message, MarketDataMsg)
         ):
-            bids, asks = self.known_bids[self.symbol], self.known_asks[self.symbol]
-            if bids and asks:
-                self.place_orders(bids[0][0], asks[0][0])
+
+
+            #bids, asks = self.known_bids[self.symbol], self.known_asks[self.symbol]
+
+            # check if arbitrage opportunity exists
+            # when bb0 < bb1 
+            # place buy order on ex0 and sell order on ex1
+            # when bb0 > bb1
+            # place sell order on ex0 and buy order on ex1
+            # when bb0 == bb1
+            # do nothing
+            # when bb0 = None or bb1 = None
+            # do nothing
+
+
+            # if ex0 ask < ex 1 ask
+            # check if enough liquidity is there to execute the trade
+            if best_ask_ex0 is not None and best_ask_ex1 is not None:
+                if best_ask_ex0 < best_ask_ex1:
+                    # ask price is lower on ex0 than ask price on ex1
+                    # place buy order on ex0 and sell order on ex1
+                    self.place_orders(side=True)
+                elif best_ask_ex0 > best_ask_ex1:
+                    self.place_orders(side=False)
+                else:
+                    pass            
+
+            # if ex0 bid < ex1 bid
+            # check if enough liquidity is there to execute the trade
+            elif best_bid_ex0 is not None and best_bid_ex1 is not None:
+                if best_bid_ex0 < best_bid_ex1:
+                    # bid price is lower on ex0 than bid price on ex1
+                    # place sell order on ex0 and buy order on ex1
+                    self.place_orders(side=False)
+                elif best_bid_ex0 > best_bid_ex1:
+                    self.place_orders(side=True)
+                else:
+                    pass
+
+
+            # if ex0 ask > ex 1 ask
+            # check if enough liquidity is there to execute the trade
+            elif best_ask_ex0 is not None and best_ask_ex1 is None:
+                
+
+
+            # if ex0 bid > ex1 bid
+            # check if enough liquidity is there to execute the trade
+
+
+            # if best_bid_ex0 is not None and best_bid_ex1 is not None:
+            #     if best_bid_ex1 < best_ask_ex0:
+            #         # bid price is higher on ex1 than ask price on ex0
+            #         # place buy order on ex1 and sell order on ex0 
+            #         self.place_orders(side=True)
+            #     elif best_bid_ex0 > best_bid_ex1:
+            #         self.place_orders(best_bid_ex1, best_bid_ex0)
+            #     else:
+            #         pass
+            # elif best_bid_ex0 is not None and best_bid_ex1 is None:
+            #     self.place_orders(best_bid_ex0, best_bid_ex0)
+            # elif best_bid_ex0 is None and best_bid_ex1 is not None:
+            #     self.place_orders(best_bid_ex1, best_bid_ex1)
+
+
             self.state = "AWAITING_MARKET_DATA"
 
-    def place_orders(self, bid: int, ask: int) -> None:
-        """Momentum Agent actions logic"""
-        if bid and ask:
-            self.mid_list.append((bid + ask) / 2)
-            if len(self.mid_list) > 20:
-                self.avg_20_list.append(
-                    IntermarketSpreadArbitrageMachine.ma(self.mid_list, n=20)[-1].round(2)
-                )
-            if len(self.mid_list) > 50:
-                self.avg_50_list.append(
-                    IntermarketSpreadArbitrageMachine.ma(self.mid_list, n=50)[-1].round(2)
-                )
-            if len(self.avg_20_list) > 0 and len(self.avg_50_list) > 0:
-                if self.order_size_model is not None:
-                    self.size = self.order_size_model.sample(
-                        random_state=self.random_state
-                    )
 
-                if self.size > 0:
-                    if self.avg_20_list[-1] >= self.avg_50_list[-1]:
-                        self.place_limit_order(
-                            self.symbol,
-                            quantity=self.size,
-                            side=Side.BID,
-                            limit_price=ask,
-                        )
-                    else:
-                        self.place_limit_order(
-                            self.symbol,
-                            quantity=self.size,
-                            side=Side.ASK,
-                            limit_price=bid,
-                        )
+    """
+        Side = True means SELL
+        Side = False means BUY
+        
+        Exchange_id = 0 means 0 has worse bid than 1
+        Exchange_id = 1 means 1 has worse bid than 0
+    """
+    def place_orders(self, side: bool, exchange_id: int, bid: int, ask: int) -> None:
+        print("test")
 
+
+    """
+        same wakeup frequency as a Market Maker
+    """
     def get_wake_frequency(self) -> NanosecondTime:
         if not self.poisson_arrival:
             return self.wake_up_freq
         else:
             delta_time = self.random_state.exponential(scale=self.arrival_rate)
             return int(round(delta_time))
-
-    @staticmethod
-    def ma(a, n=20):
-        ret = np.cumsum(a, dtype=float)
-        ret[n:] = ret[n:] - ret[:-n]
-        return ret[n - 1 :] / n
