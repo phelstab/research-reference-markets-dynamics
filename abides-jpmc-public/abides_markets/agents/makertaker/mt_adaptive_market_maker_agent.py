@@ -26,6 +26,7 @@ ANCHOR_MIDDLE_STR = "middle"
 ADAPTIVE_SPREAD_STR = "adaptive"
 INITIAL_SPREAD_VALUE = 50
 
+MIND_FEES = True 
 
 logger = logging.getLogger(__name__)
 
@@ -410,9 +411,18 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             highest_bid = int(mid_point - self.window_size)
             lowest_ask = int(mid_point + 1)
 
+        print("highest_bid", highest_bid)
+        print("lowest_ask", lowest_ask)
+        # get current spread
+        test = self.known_asks[self.symbol][0][0]
+        test2 = self.known_bids[self.symbol][0][0]
+        print("spread", lowest_ask - highest_bid)
+
         lowest_bid = highest_bid - ((self.num_ticks - 1) * self.tick_size)
         highest_ask = lowest_ask + ((self.num_ticks - 1) * self.tick_size)
 
+        print("highest_bid", highest_bid)
+        print("lowest_ask", lowest_ask)
         bids_to_place = [
             price
             for price in range(lowest_bid, highest_bid + self.tick_size, self.tick_size)
@@ -490,6 +500,13 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
                     self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=0,
                 )
             )
+
+        # for each order get the 
+        # 1. limit price
+        # 2. order side
+        # 3. order size
+        # 4. current best bid and ask
+
 
         self.place_multiple_orders(orders)
 

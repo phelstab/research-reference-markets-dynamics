@@ -1,8 +1,9 @@
 """
     Fees for different exchanges
 """
-MAKER_REBATE = 0 # 0.0$
-TAKER_FEE = 0.001 # 0.1%
+# https://www.sec.gov/spotlight/emsac/memo-maker-taker-fees-on-equities-exchanges.pdf
+MAKER_REBATE = -0.2 # $0.002 per share to post liquidity (i.e., 20 cents per 100 shares)
+TAKER_FEE = 0.3 # $0.003 per share to take liquidity (i.e., 30 cents per 100 shares)
 
 VAR_FEE = 0.0095 # 0.95%
 VAR_LIMIT = 110_001 # 1,100.01 $
@@ -27,11 +28,11 @@ class Fees():
             else:
                 return False
 
-    def cal_maker_taker_market_fee(self, price, quantity, type) -> int:
-        if type == False:
-            return MAKER_REBATE
+    def cal_maker_taker_market_fee(self, quantity, type) -> int:
+        if type == 0:
+            return MAKER_REBATE * quantity
         else:
-            return TAKER_FEE * (price / 100) * quantity
+            return TAKER_FEE * quantity
 
     
     """

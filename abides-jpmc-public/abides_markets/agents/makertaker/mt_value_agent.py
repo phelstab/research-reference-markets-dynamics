@@ -13,7 +13,7 @@ from ...fees import Fees
 
 logger = logging.getLogger(__name__)
 
-MIND_FEES = False 
+MIND_FEES = True 
 
 
 class MTValueAgent(MTTradingAgent):
@@ -261,6 +261,7 @@ class MTValueAgent(MTTradingAgent):
                 )  # submit a market order to buy, a limit order inside the spread or deeper in the book
         else:
             # initialize randomly
+            #return # we dont place an order when we dont have a bid and ask
             buy = self.random_state.randint(0, 1 + 1)
             p = r_T
 
@@ -271,27 +272,35 @@ class MTValueAgent(MTTradingAgent):
         side = Side.BID if buy == 1 else Side.ASK
 
         if self.size > 0:
-
             # include fee logic
-            if(MIND_FEES == True):
-                mid = 0
+            if(MIND_FEES == True): 
+                # if we dont have a bid or ask, lets the get last trade price
                 if bid and ask:
                     mid = int((ask + bid) / 2)
-                fee = Fees.cal_variable_market_fee(self, self.size, price=p)
+                else:
+                    mid = self.get_last_trade(self.symbol)
                 if (side == Side.BID):
                     # we are long, e. g. 5 * 1000 - 5 * 998 - 11.90 = -1.9 < 0 do nothing
-                    if((self.size * p) - (self.size * mid) - fee >= 0):
+                    b_maker_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=bid, current_best_ask=ask, side=Side.BID)
+                    fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
+                    if(b_maker_taker == 0):
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                    elif((self.size * p) - (self.size * mid) - fee >= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                     else: 
                         return
                 else:
                     # we are short, e. g. 5 * 998 - 5 * 1000 + 11.90 = 1.9 > 0 do nothing
-                    if((self.size * p) - (self.size * mid) + fee <= 0):
+                    b_maker_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=bid, current_best_ask=ask, side=Side.ASK)
+                    fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
+                    if(b_maker_taker == 0):
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                    elif((self.size * p) - (self.size * mid) + fee <= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                     else:
                         return
             else:
-                self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                self.place_limit_order(self.symbol, self.size, side, p, order_fee=0)
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message
