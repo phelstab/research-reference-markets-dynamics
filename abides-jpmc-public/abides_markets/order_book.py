@@ -204,6 +204,10 @@ class OrderBook:
         # Track which (if any) existing order was matched with the current order.
         book = self.asks if order.side.is_bid() else self.bids
 
+        # Track current book best bid ask prices pre execution
+        best_bid_pre = self.bids[0].price if self.bids else -1
+        best_ask_pre = self.asks[0].price if self.asks else -1
+
         # First, examine the correct side of the order book for a match.
         if len(book) == 0:
             # No orders on this side.
@@ -297,6 +301,41 @@ class OrderBook:
                 )
             )
 
+            # Track current book best bid ask prices post execution
+            best_bid_post = self.bids[0].price if self.bids else -1
+            best_ask_post = self.asks[0].price if self.asks else -1
+
+            # check if all not 0
+            if best_bid_pre != -1 and best_ask_pre != -1 and best_bid_post != -1 and best_ask_post != -1:            
+                # calculate the price impact of the execution, realized spread, and realized mid price
+                realized_mid_price_pre = (best_ask_pre + best_bid_pre) / 2
+                realized_mid_price_post = (best_ask_post + best_bid_post) / 2
+
+                # absolute realized spread is the difference between transaction price and mid price
+                absolute_realized_spread_pre = matched_order.fill_price - realized_mid_price_pre
+                absolute_realized_spread_post = matched_order.fill_price - realized_mid_price_post
+                # relative realized spread
+                relative_realized_spread_pre = (
+                    absolute_realized_spread_pre / realized_mid_price_pre
+                )
+                relative_realized_spread_post = (
+                    absolute_realized_spread_post / realized_mid_price_post
+                )
+
+                # realized spread 
+                rel = 2 * (realized_mid_price_post - matched_order.fill_price) / (realized_mid_price_pre) * 100
+                # effective spread
+                eff = 2 * (matched_order.fill_price - realized_mid_price_post) / (realized_mid_price_post) * 100
+                # quoted spread
+                quo = ((best_ask_post - best_bid_post) / realized_mid_price_post) * 100
+                # log the spreads
+                exec_spreads = {"order_id": matched_order.order_id,
+                "time": self.owner.current_time,
+                "realized_spread": rel,
+                "effective_spread": eff,
+                "quoted_spread": quo}
+                self.owner.logEvent("EXECUTION_SPREAD", exec_spreads)
+                        
             filled_order = deepcopy(order)
             filled_order.quantity = matched_order.quantity
             filled_order.fill_price = matched_order.fill_price

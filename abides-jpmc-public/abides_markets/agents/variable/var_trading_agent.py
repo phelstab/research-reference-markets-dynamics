@@ -777,6 +777,8 @@ class VarTradingAgent(FinancialAgent):
             Logging order execution and calulating market fee for stock exchange
             """
             __order = order.to_dict()
+            # get the current time
+            __order["time_executed"] = self.current_time
             
             self.logEvent("ORDER_EXECUTED", __order, deepcopy_event=False)
 

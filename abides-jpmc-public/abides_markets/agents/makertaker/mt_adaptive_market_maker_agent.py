@@ -364,6 +364,7 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
                 qty if qty >= self.min_order_size else self.min_order_size
             )
         else:
+            # currently not used
             holdings = self.get_holdings(self.symbol)
             proportion_sell = sigmoid(holdings, self.skew_beta)
             sell_size = ceil(proportion_sell * qty)
@@ -395,9 +396,7 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             else:
                 # trade imbalance, +1 means all transactions are buy, -1 means all transactions are sell
                 trade_imbalance = (
-                    2
-                    * buy_transacted_volume
-                    / (buy_transacted_volume + sell_transacted_volume)
+                    2 * buy_transacted_volume / (buy_transacted_volume + sell_transacted_volume)
                 ) - 1
                 mid_point = int(mid + (trade_imbalance * self.price_skew_param))
 
@@ -411,18 +410,10 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             highest_bid = int(mid_point - self.window_size)
             lowest_ask = int(mid_point + 1)
 
-        print("highest_bid", highest_bid)
-        print("lowest_ask", lowest_ask)
-        # get current spread
-        test = self.known_asks[self.symbol][0][0]
-        test2 = self.known_bids[self.symbol][0][0]
-        print("spread", lowest_ask - highest_bid)
 
         lowest_bid = highest_bid - ((self.num_ticks - 1) * self.tick_size)
         highest_ask = lowest_ask + ((self.num_ticks - 1) * self.tick_size)
 
-        print("highest_bid", highest_bid)
-        print("lowest_ask", lowest_ask)
         bids_to_place = [
             price
             for price in range(lowest_bid, highest_bid + self.tick_size, self.tick_size)
