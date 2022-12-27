@@ -123,29 +123,32 @@ and providing stock exchanges or market makers an advanced version of ABIDES as 
 === Installation
 
 ```sh
-# Python 3.7.9 or 3.9.13 recommended
-# Update pip and create venv with example name lambda
-python -m pip install --upgrade pip
+# Step 1: Select Python version and create Virtual Environment
+# Python 3.7.14 >= recommended (check with python --version)
+# Update pip and create venv with example name lambda 
+# (Used lambda as naming for the venv)
 python -m venv lambda
+python -m pip install --upgrade pip
 
+# Step 2: Activate venv
 # Activate venv on Linux
 source lambda/bin/activate
-
 # Activate venv on Windows
 .\lambda\Scripts\activate
-
-# Activate venv on mac and without and with fishshell
+# Activate venv on mac 
 source lambda/bin/activate
+# or through fishshell
 . lambda/bin/activate.fish
 
 # Install libs
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 
-# Optional installs
+# Optional installs (recommended)
 pip install torch
 pip install tensorboard
 pip install ipykernel
+# Set up kernel for jupyter notebook to use venv in jupyter notebook
 python -m ipykernel install --user --name=lambda
 
 # Run and install in root folder
