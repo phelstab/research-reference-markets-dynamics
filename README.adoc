@@ -134,7 +134,6 @@ cd abides-jpmc-public
 # Update pip and create venv with example name lambda 
 # (Used lambda as naming for the venv)
 python -m venv lambda
-python -m pip install --upgrade pip
 
 # Step 4: Activate venv
 # Activate venv on Linux
@@ -146,7 +145,8 @@ source lambda/bin/activate
 # or through fishshell
 . lambda/bin/activate.fish
 
-# Step 5: Install libs
+# Step 5: Update pip and install libs
+python -m pip install --upgrade pip
 pip install -r requirements_main.txt
 
 # Step 6: Additional installs (recommended)

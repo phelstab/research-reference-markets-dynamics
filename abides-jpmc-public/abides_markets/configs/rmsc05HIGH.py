@@ -127,7 +127,7 @@ def build_config(
             "megashock_mean": megashock_mean,
             "megashock_var": megashock_var,
             "random_state": np.random.RandomState(
-                seed=np.random.randint(low=0, high=2 ** 32)
+                seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
             ),
         }
     }
