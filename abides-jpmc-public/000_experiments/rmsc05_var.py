@@ -192,7 +192,7 @@ Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time', yax
     Preparing Market Shares Data
 """
 executed_orders =  logs_df[(logs_df.EventType=="ORDER_EXECUTED")]
-executed_orders = executed_orders.sort_values(by='time_placed', ascending=True)
+executed_orders = executed_orders.sort_values(by=['time_executed']).reset_index()
 
 executed_orders['count'] = 1
 executed_orders['cumsum_order_qty'] = executed_orders['count'].cumsum()
@@ -220,15 +220,15 @@ fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spre
     Plot the Figures
 """
 fig_executed_order = go.Figure()
-fig_executed_order.add_trace(go.Scatter(x=executed_orders.time_placed, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
+fig_executed_order.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
 fig_executed_order.update_layout(title='Executed orders trading volumes', xaxis_title='Time', yaxis_title='Trading Volume')
 
 fig_executed_order_qty = go.Figure()
-fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.time_placed, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
+fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
 fig_executed_order_qty.update_layout(title='Executed orders quantity', xaxis_title='Time', yaxis_title='Order Quantity')
 
 fig_exchange_turnover = go.Figure()
-fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_placed, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
+fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
 fig_exchange_turnover.update_layout(title='Market fees turnover', xaxis_title='Time', yaxis_title='Turnaround')
 
 
