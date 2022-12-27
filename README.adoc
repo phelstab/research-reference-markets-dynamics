@@ -123,6 +123,17 @@ and providing stock exchanges or market makers an advanced version of ABIDES as 
 === Installation
 
 ```sh
+# STRONGLY RECOMMENDED TO USE UNIX BASED SYSTEM (Linux, Mac) due problems with windows dt & pd binaries (see 2.4)
+# Step 0: Install Python version 3.7.14 or higher
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:deadsnakes/ppa #unofficial but trusted
+apt-get install python3.7
+sudo apt install python3-pip
+alias python=python3.7
+# check with python --version (should be 3.7.14 or higher)
+```
+
+```sh
 # Step 1: Clone repository
 git clone https://github.com/phelstab/bachelor.git
 
@@ -211,6 +222,19 @@ The following conventions are used in the document and are specially marked:
 [#Figure1]
 .ABIDES Overview
 image::ABIDES.png[]
+
+
+=== Known Bugs
+Pandas timedelta 64bit is returning wrong values on windows. 
+
+* Python Version 3.7.14 on both systems
+* Pandas Version 1.2.4 on both systems
+* Numpy Version 1.20.3 on both systems
+* Windows 11 vs WSL
+
+[#Figure2]
+.pd timedelta bug
+image::bug.png[]
 
 
 // **#Example 1(#****#<here overview diagram as PlantUML>)****:#**
