@@ -167,27 +167,32 @@ def get_treemap_fig() -> go.Figure:
     return fig
 
 
+
 """
     Price / Timeseries Plotting
 """
-times = [ t - ns_date(t) for t in Ex_0_L2["times"] ]
-times = list(map(int, times))
-bid_prices = Ex_0_L2["bids"][:,0,0]
-ask_prices = Ex_0_L2["asks"][:,0,0]
-bid_prices = np.divide(bid_prices, 100)
-ask_prices = np.divide(ask_prices, 100)
-Ex_0_fig = go.Figure(layout_yaxis_range =[998, 1002])
-Ex_0_fig.add_trace(go.Scatter(x=times, y=bid_prices, mode='markers', marker_size=3, name='best_bids'))
-Ex_0_fig.add_trace(go.Scatter(x=times, y=ask_prices, mode='markers', marker_size=3, name='best_asks'))
-Ex_0_fig.update_layout(title='Best Bid / Ask Prices Exchange 0', xaxis_title='Time', yaxis_title='Price')
+Ex0_best_bids = pd.DataFrame(Ex_0_L1["best_bids"],columns=["time","price","qty"])
+Ex0_best_asks = pd.DataFrame(Ex_0_L1["best_asks"],columns=["time","price","qty"])
+# divide all prices by 100 
+Ex0_best_bids['price'] = Ex0_best_bids['price'].div(100)
+Ex0_best_asks['price'] = Ex0_best_asks['price'].div(100)
+# remove all nan values
+# Ex0_best_bids = Ex0_best_bids.dropna()
+# Ex0_best_asks = Ex0_best_asks.dropna()
+# remove all time duplicates
+# Ex0_best_bids = Ex0_best_bids.drop_duplicates(subset=['time'])
+# Ex0_best_asks = Ex0_best_asks.drop_duplicates(subset=['time'])
+Ex_0_fig = go.Figure()
+Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
+Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_asks["price"], mode='markers', marker_size=3, name='best_asks'))
+Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time', yaxis_title='Price')
 
 
 """
     Preparing Market Shares Data
 """
 executed_orders =  logs_df[(logs_df.EventType=="ORDER_EXECUTED")]
-executed_orders = executed_orders[executed_orders.EventTime != 0]
-executed_orders = executed_orders.sort_values(by='EventTime', ascending=True)
+executed_orders = executed_orders.sort_values(by='time_placed', ascending=True)
 
 executed_orders['count'] = 1
 executed_orders['cumsum_order_qty'] = executed_orders['count'].cumsum()
@@ -196,21 +201,35 @@ executed_orders['order_fee'] = executed_orders['order_fee'].div(100)
 executed_orders['cumsum_order_fee'] = executed_orders['order_fee'].cumsum()
 executed_orders.drop(columns=['count'], inplace=True)
 
+execution_spreads = logs_df[logs_df.EventType.isin(["EXECUTION_SPREAD"])]
+# sort by time ascending and reset index
+execution_spreads = execution_spreads.sort_values(by=['time']).reset_index()
+# average of realized spreads 
+average_realized_spreads = execution_spreads['realized_spread'].mean()
+# average of effective spreads
+average_effective_spreads = execution_spreads['effective_spread'].mean()
+# average of quoted spreads
+average_quoted_spreads = execution_spreads['quoted_spread'].mean()
+fig_spreads = go.Figure()
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='% Realized spreads'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='% Effective spreads'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='% Quoted spreads'))
+fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spreads')
 
 """
     Plot the Figures
 """
 fig_executed_order = go.Figure()
-fig_executed_order.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
-fig_executed_order.update_layout(title='Executed Order Trading Volumes Over Time (ex pre-market)', xaxis_title='Time', yaxis_title='Trading Volume')
+fig_executed_order.add_trace(go.Scatter(x=executed_orders.time_placed, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
+fig_executed_order.update_layout(title='Executed orders trading volumes', xaxis_title='Time', yaxis_title='Trading Volume')
 
 fig_executed_order_qty = go.Figure()
-fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
-fig_executed_order_qty.update_layout(title='Executed Orders Quantity Over Time (ex pre-market)', xaxis_title='Time', yaxis_title='Order Quantity')
+fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.time_placed, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
+fig_executed_order_qty.update_layout(title='Executed orders quantity', xaxis_title='Time', yaxis_title='Order Quantity')
 
 fig_exchange_turnover = go.Figure()
-fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
-fig_exchange_turnover.update_layout(title='Market Fees Turnover (ex pre-market)', xaxis_title='Time', yaxis_title='Turnaround')
+fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_placed, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
+fig_exchange_turnover.update_layout(title='Market fees turnover', xaxis_title='Time', yaxis_title='Turnaround')
 
 
 
@@ -229,16 +248,31 @@ colors = {
 }
 
 ex_0_info = ex_0_name + " Orderbook Imbalance: " + str(ex_0_ob_imbalance)
+ex_0_average_realized_spreads = "Average realized spreads: " + str(average_realized_spreads)
+ex_0_average_effective_spreads = "Average effective spreads: " + str(average_effective_spreads)
+ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_spreads)
 
 def exchange_0_info() -> html.Div:
         return html.Div(
             children=[
                 html.Span(
                     ex_0_info,
-                    style= {'color': 'grey', 'margin-left': '25px','font-weight': 'bold', 'font-size': '22px'},
+                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
                 ),
-                html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
-                ,
+                html.Span(
+                    ex_0_average_quoted_spreads,
+                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
+                ),
+                html.Span(
+                    ex_0_average_effective_spreads,
+                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
+                ),
+                html.Span(
+                    ex_0_average_realized_spreads,
+                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
+                ),
+                # html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
+                # ,
             ]
         ) 
 
@@ -281,6 +315,11 @@ app.layout = html.Div(
             ),
             dbc.Col(
                 dcc.Graph(id='the_graph7', figure=fig_executed_order, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph6', figure=fig_spreads, config= {'displaylogo': False}),
             ),
         ]),
     ]
