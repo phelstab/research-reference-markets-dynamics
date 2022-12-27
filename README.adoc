@@ -127,6 +127,7 @@ and providing stock exchanges or market makers an advanced version of ABIDES as 
 git clone https://github.com/phelstab/bachelor.git
 
 # Step 2: Switch to abides folder
+cd bachelor
 cd abides-jpmc-public
 
 # Step 3: Select Python version and create Virtual Environment
