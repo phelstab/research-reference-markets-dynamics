@@ -11,7 +11,7 @@ from ...orders import Side
 from .mt_trading_agent import MTTradingAgent
 from ...fees import Fees
 
-MIND_FEES = True 
+MIND_FEES = False 
 
 
 class MTMomentumAgent(MTTradingAgent):

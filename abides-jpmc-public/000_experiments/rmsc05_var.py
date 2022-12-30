@@ -16,7 +16,7 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc05VAR
 
 config = rmsc05VAR.build_config(
-    end_time="10:00:00",
+    end_time="16:00:00",
     seed=1337,
 )
 
@@ -217,6 +217,45 @@ fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['
 fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spreads')
 
 """
+    Speed of fills and fill rate
+"""
+# filter order submitted and order executed from logs
+order_submitted = logs_df[logs_df.EventType.isin(["ORDER_SUBMITTED"])]
+order_executed = logs_df[logs_df.EventType.isin(["ORDER_EXECUTED"])]
+# sum quantity grouped by id in order_executed and create new dataframe with columns order_id quantity
+order_executed_sum = order_executed.groupby(['order_id'])['quantity'].sum().reset_index()
+# substract order_submitted quantity from order_executed_sum quantity and add new column to partial_left
+order_submitted['partial_left'] = order_submitted['quantity'].sub(order_submitted['order_id'].map(order_executed_sum.set_index('order_id')['quantity']))
+not_fully_executed = order_submitted[order_submitted.partial_left != 0]
+only_fully_executed = order_submitted[order_submitted.partial_left == 0]
+count_not_fully_executed = len(order_submitted[order_submitted.partial_left != 0])
+# new dataframe from order_executed but only with order_id in only_full_executed and reset index 
+order_executed_only_full_executed = order_executed[order_executed.order_id.isin(only_fully_executed.order_id)]
+# add order_quanity from only_fully_executed to order_executed_only_full_executed as new column with "placed_quantity"
+order_executed_only_full_executed['placed_quantity'] = order_executed_only_full_executed['order_id'].map(only_fully_executed.set_index('order_id')['quantity'])
+# filter order_executed_only_full_executed by order_id but only take the latest time_placed order
+order_executed_only_full_executed = order_executed_only_full_executed.groupby(['order_id']).tail(1).reset_index()
+# time placed - time_executed and add new column to order_executed_only_full_executed
+order_executed_only_full_executed['speed_of_fill'] = ((order_executed_only_full_executed['time_executed'] - order_executed_only_full_executed['time_placed']).div(1000000))
+# convert to milliseconds
+order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e6)
+# Likelihood of a fill == fill rate Fill rate = (partial_execution / placed_quantity) * 100
+order_executed_only_full_executed['fill_rate'] = (order_executed_only_full_executed['quantity'].div(order_executed_only_full_executed['placed_quantity'])).mul(100)
+# average of speed_of_fill 
+average_speed_of_fill = order_executed_only_full_executed['speed_of_fill'].mean()
+# average of fill_rate
+average_fill_rate = order_executed_only_full_executed['fill_rate'].mean()
+order_executed_only_full_executed = order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
+fig_speed = go.Figure()
+fig_speed.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
+fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (nanoseconds)')
+fig_fill_rate= go.Figure()
+fig_fill_rate.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
+fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
+
+
+
+"""
     Plot the Figures
 """
 fig_executed_order = go.Figure()
@@ -251,6 +290,8 @@ ex_0_info = ex_0_name + " Orderbook Imbalance: " + str(ex_0_ob_imbalance)
 ex_0_average_realized_spreads = "Average realized spreads: " + str(average_realized_spreads)
 ex_0_average_effective_spreads = "Average effective spreads: " + str(average_effective_spreads)
 ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_spreads)
+ex_0_average_speed_of_fill = "Average speed of execution: " + str(average_speed_of_fill)
+ex_0_average_fill_rate = "Average fill rate: " + str(average_fill_rate)
 
 def exchange_0_info() -> html.Div:
         return html.Div(
@@ -275,7 +316,19 @@ def exchange_0_info() -> html.Div:
                 # ,
             ]
         ) 
-
+def exchange_0_info_2() -> html.Div:
+        return html.Div(
+            children=[
+                html.Span(
+                    ex_0_average_speed_of_fill,
+                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
+                ),
+                html.Span(
+                    ex_0_average_fill_rate,
+                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
+                ),
+            ]
+        ) 
 
 Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
 
@@ -288,7 +341,9 @@ app.layout = html.Div(
         dbc.Row([
             exchange_0_info(),
         ]),
-        
+        dbc.Row([
+            exchange_0_info_2(),
+        ]),
         dbc.Row([
             dbc.Col(
                 dcc.Graph(id='the_graph1', figure=get_treemap_fig(), config= {'displaylogo': False}),
@@ -301,25 +356,33 @@ app.layout = html.Div(
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph4', figure=Ex_0_orderbook, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph3', figure=Ex_0_orderbook, config= {'displaylogo': False}),
             ),
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph8', figure=fig_exchange_turnover, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph4', figure=fig_exchange_turnover, config= {'displaylogo': False}),
             ),
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph6', figure=fig_executed_order_qty, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph5', figure=fig_executed_order_qty, config= {'displaylogo': False}),
             ),
             dbc.Col(
-                dcc.Graph(id='the_graph7', figure=fig_executed_order, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph6', figure=fig_executed_order, config= {'displaylogo': False}),
             ),
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph6', figure=fig_spreads, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph7', figure=fig_spreads, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph8', figure=fig_speed, config= {'displaylogo': False}),
+            ),
+            dbc.Col(
+                dcc.Graph(id='the_graph9', figure=fig_fill_rate, config= {'displaylogo': False}),
             ),
         ]),
     ]

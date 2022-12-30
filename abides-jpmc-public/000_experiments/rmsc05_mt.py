@@ -16,7 +16,7 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc05MT
 
 config = rmsc05MT.build_config(
-    end_time="10:00:00",
+    end_time="16:00:00",
     seed=1337,
 )
 
@@ -167,27 +167,32 @@ def get_treemap_fig() -> go.Figure:
     return fig
 
 
+
 """
     Price / Timeseries Plotting
 """
-times = [ t - ns_date(t) for t in Ex_0_L2["times"] ]
-times = list(map(int, times))
-bid_prices = Ex_0_L2["bids"][:,0,0]
-ask_prices = Ex_0_L2["asks"][:,0,0]
-bid_prices = np.divide(bid_prices, 100)
-ask_prices = np.divide(ask_prices, 100)
-Ex_0_fig = go.Figure(layout_yaxis_range =[998, 1002])
-Ex_0_fig.add_trace(go.Scatter(x=times, y=bid_prices, mode='markers', marker_size=3, name='best_bids'))
-Ex_0_fig.add_trace(go.Scatter(x=times, y=ask_prices, mode='markers', marker_size=3, name='best_asks'))
-Ex_0_fig.update_layout(title='Best Bid / Ask Prices Exchange 0', xaxis_title='Time', yaxis_title='Price')
+Ex0_best_bids = pd.DataFrame(Ex_0_L1["best_bids"],columns=["time","price","qty"])
+Ex0_best_asks = pd.DataFrame(Ex_0_L1["best_asks"],columns=["time","price","qty"])
+# divide all prices by 100 
+Ex0_best_bids['price'] = Ex0_best_bids['price'].div(100)
+Ex0_best_asks['price'] = Ex0_best_asks['price'].div(100)
+# remove all nan values
+# Ex0_best_bids = Ex0_best_bids.dropna()
+# Ex0_best_asks = Ex0_best_asks.dropna()
+# remove all time duplicates
+# Ex0_best_bids = Ex0_best_bids.drop_duplicates(subset=['time'])
+# Ex0_best_asks = Ex0_best_asks.drop_duplicates(subset=['time'])
+Ex_0_fig = go.Figure()
+Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
+Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_asks["price"], mode='markers', marker_size=3, name='best_asks'))
+Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time', yaxis_title='Price')
 
 
 """
     Preparing Market Shares Data
 """
 executed_orders =  logs_df[(logs_df.EventType=="ORDER_EXECUTED")]
-executed_orders = executed_orders[executed_orders.EventTime != 0]
-executed_orders = executed_orders.sort_values(by='EventTime', ascending=True)
+executed_orders = executed_orders.sort_values(by=['time_executed']).reset_index()
 
 executed_orders['count'] = 1
 executed_orders['cumsum_order_qty'] = executed_orders['count'].cumsum()
@@ -196,21 +201,74 @@ executed_orders['order_fee'] = executed_orders['order_fee'].div(100)
 executed_orders['cumsum_order_fee'] = executed_orders['order_fee'].cumsum()
 executed_orders.drop(columns=['count'], inplace=True)
 
+execution_spreads = logs_df[logs_df.EventType.isin(["EXECUTION_SPREAD"])]
+# sort by time ascending and reset index
+execution_spreads = execution_spreads.sort_values(by=['time']).reset_index()
+# average of realized spreads 
+average_realized_spreads = execution_spreads['realized_spread'].mean()
+# average of effective spreads
+average_effective_spreads = execution_spreads['effective_spread'].mean()
+# average of quoted spreads
+average_quoted_spreads = execution_spreads['quoted_spread'].mean()
+fig_spreads = go.Figure()
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='% Realized spreads'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='% Effective spreads'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='% Quoted spreads'))
+fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spreads')
+
+"""
+    Speed of fills and fill rate
+"""
+# filter order submitted and order executed from logs
+order_submitted = logs_df[logs_df.EventType.isin(["ORDER_SUBMITTED"])]
+order_executed = logs_df[logs_df.EventType.isin(["ORDER_EXECUTED"])]
+# sum quantity grouped by id in order_executed and create new dataframe with columns order_id quantity
+order_executed_sum = order_executed.groupby(['order_id'])['quantity'].sum().reset_index()
+# substract order_submitted quantity from order_executed_sum quantity and add new column to partial_left
+order_submitted['partial_left'] = order_submitted['quantity'].sub(order_submitted['order_id'].map(order_executed_sum.set_index('order_id')['quantity']))
+not_fully_executed = order_submitted[order_submitted.partial_left != 0]
+only_fully_executed = order_submitted[order_submitted.partial_left == 0]
+count_not_fully_executed = len(order_submitted[order_submitted.partial_left != 0])
+# new dataframe from order_executed but only with order_id in only_full_executed and reset index 
+order_executed_only_full_executed = order_executed[order_executed.order_id.isin(only_fully_executed.order_id)]
+# add order_quanity from only_fully_executed to order_executed_only_full_executed as new column with "placed_quantity"
+order_executed_only_full_executed['placed_quantity'] = order_executed_only_full_executed['order_id'].map(only_fully_executed.set_index('order_id')['quantity'])
+# filter order_executed_only_full_executed by order_id but only take the latest time_placed order
+order_executed_only_full_executed = order_executed_only_full_executed.groupby(['order_id']).tail(1).reset_index()
+# time placed - time_executed and add new column to order_executed_only_full_executed
+order_executed_only_full_executed['speed_of_fill'] = ((order_executed_only_full_executed['time_executed'] - order_executed_only_full_executed['time_placed']).div(1000000))
+# convert to milliseconds
+order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e6)
+# Likelihood of a fill == fill rate Fill rate = (partial_execution / placed_quantity) * 100
+order_executed_only_full_executed['fill_rate'] = (order_executed_only_full_executed['quantity'].div(order_executed_only_full_executed['placed_quantity'])).mul(100)
+# average of speed_of_fill 
+average_speed_of_fill = order_executed_only_full_executed['speed_of_fill'].mean()
+# average of fill_rate
+average_fill_rate = order_executed_only_full_executed['fill_rate'].mean()
+order_executed_only_full_executed = order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
+fig_speed = go.Figure()
+fig_speed.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
+fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (nanoseconds)')
+fig_fill_rate= go.Figure()
+fig_fill_rate.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
+fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
+
+
 
 """
     Plot the Figures
 """
 fig_executed_order = go.Figure()
-fig_executed_order.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
-fig_executed_order.update_layout(title='Executed Order Trading Volumes Over Time (ex pre-market)', xaxis_title='Time', yaxis_title='Trading Volume')
+fig_executed_order.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
+fig_executed_order.update_layout(title='Executed orders trading volumes', xaxis_title='Time', yaxis_title='Trading Volume')
 
 fig_executed_order_qty = go.Figure()
-fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
-fig_executed_order_qty.update_layout(title='Executed Orders Quantity Over Time (ex pre-market)', xaxis_title='Time', yaxis_title='Order Quantity')
+fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
+fig_executed_order_qty.update_layout(title='Executed orders quantity', xaxis_title='Time', yaxis_title='Order Quantity')
 
 fig_exchange_turnover = go.Figure()
-fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.EventTime, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
-fig_exchange_turnover.update_layout(title='Market Fees Turnover (ex pre-market)', xaxis_title='Time', yaxis_title='Turnaround')
+fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
+fig_exchange_turnover.update_layout(title='Market fees turnover', xaxis_title='Time', yaxis_title='Turnaround')
 
 
 
@@ -229,19 +287,48 @@ colors = {
 }
 
 ex_0_info = ex_0_name + " Orderbook Imbalance: " + str(ex_0_ob_imbalance)
+ex_0_average_realized_spreads = "Average realized spreads: " + str(average_realized_spreads)
+ex_0_average_effective_spreads = "Average effective spreads: " + str(average_effective_spreads)
+ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_spreads)
+ex_0_average_speed_of_fill = "Average speed of execution: " + str(average_speed_of_fill)
+ex_0_average_fill_rate = "Average fill rate: " + str(average_fill_rate)
 
 def exchange_0_info() -> html.Div:
         return html.Div(
             children=[
                 html.Span(
                     ex_0_info,
-                    style= {'color': 'grey', 'margin-left': '25px','font-weight': 'bold', 'font-size': '22px'},
+                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
                 ),
-                html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
-                ,
+                html.Span(
+                    ex_0_average_quoted_spreads,
+                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
+                ),
+                html.Span(
+                    ex_0_average_effective_spreads,
+                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
+                ),
+                html.Span(
+                    ex_0_average_realized_spreads,
+                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
+                ),
+                # html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
+                # ,
             ]
         ) 
-
+def exchange_0_info_2() -> html.Div:
+        return html.Div(
+            children=[
+                html.Span(
+                    ex_0_average_speed_of_fill,
+                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
+                ),
+                html.Span(
+                    ex_0_average_fill_rate,
+                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
+                ),
+            ]
+        ) 
 
 Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
 
@@ -254,7 +341,9 @@ app.layout = html.Div(
         dbc.Row([
             exchange_0_info(),
         ]),
-        
+        dbc.Row([
+            exchange_0_info_2(),
+        ]),
         dbc.Row([
             dbc.Col(
                 dcc.Graph(id='the_graph1', figure=get_treemap_fig(), config= {'displaylogo': False}),
@@ -267,20 +356,33 @@ app.layout = html.Div(
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph4', figure=Ex_0_orderbook, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph3', figure=Ex_0_orderbook, config= {'displaylogo': False}),
             ),
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph8', figure=fig_exchange_turnover, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph4', figure=fig_exchange_turnover, config= {'displaylogo': False}),
             ),
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph6', figure=fig_executed_order_qty, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph5', figure=fig_executed_order_qty, config= {'displaylogo': False}),
             ),
             dbc.Col(
-                dcc.Graph(id='the_graph7', figure=fig_executed_order, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph6', figure=fig_executed_order, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph7', figure=fig_spreads, config= {'displaylogo': False}),
+            ),
+        ]),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(id='the_graph8', figure=fig_speed, config= {'displaylogo': False}),
+            ),
+            dbc.Col(
+                dcc.Graph(id='the_graph9', figure=fig_fill_rate, config= {'displaylogo': False}),
             ),
         ]),
     ]

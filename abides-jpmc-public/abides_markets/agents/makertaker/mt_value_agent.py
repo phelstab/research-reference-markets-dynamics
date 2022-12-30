@@ -13,7 +13,7 @@ from ...fees import Fees
 
 logger = logging.getLogger(__name__)
 
-MIND_FEES = True 
+MIND_FEES = False 
 
 
 class MTValueAgent(MTTradingAgent):

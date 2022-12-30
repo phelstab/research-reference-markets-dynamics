@@ -26,7 +26,7 @@ ANCHOR_MIDDLE_STR = "middle"
 ADAPTIVE_SPREAD_STR = "adaptive"
 INITIAL_SPREAD_VALUE = 50
 
-MIND_FEES = True 
+MIND_FEES = False 
 
 logger = logging.getLogger(__name__)
 

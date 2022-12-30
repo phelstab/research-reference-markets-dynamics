@@ -777,7 +777,7 @@ class MTTradingAgent(FinancialAgent):
             Logging order execution and calulating market fee for stock exchange
             """
             __order = order.to_dict()
-            
+            __order["time_executed"] = self.current_time
             self.logEvent("ORDER_EXECUTED", __order, deepcopy_event=False)
 
         # At the very least, we must update CASH and holdings at execution time.

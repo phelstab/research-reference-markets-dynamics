@@ -38,7 +38,11 @@ from .makertaker.mt_momentum_agent import MTMomentumAgent
 from .makertaker.mt_noise_agent import MTNoiseAgent
 from .makertaker.mt_value_agent import MTValueAgent
 from .makertaker.mt_adaptive_market_maker_agent import MTAdaptiveMarketMakerAgent
-
+from .nofee.nf_adaptive_market_maker_agent import NFAdaptiveMarketMakerAgent
+from .nofee.nf_momentum_agent import NFMomentumAgent
+from .nofee.nf_noise_agent import NFNoiseAgent
+from .nofee.nf_value_agent import NFValueAgent
+from .nofee.nf_trading_agent import NFTradingAgent
 
 
 from .execution.pov_execution_agent import POVExecutionAgent

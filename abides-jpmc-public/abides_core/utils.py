@@ -81,7 +81,7 @@ def fmt_ts(timestamp: NanosecondTime) -> str:
     """
     # return with milisecond precision
     #return pd.Timestamp(timestamp, unit="ns").strftime("%H:%M:%S.%f")
-    #return timestamp
+    return timestamp
     #return pd.Timestamp(timestamp, unit="ns").strftime("%Y-%m-%d %H:%M:%S")
 
 
