@@ -17,6 +17,7 @@ from ...messages.marketdata import (
 from ...messages.query import QuerySpreadResponseMsg, QueryTransactedVolResponseMsg
 from ...orders import Side
 from .var_trading_agent import VarTradingAgent
+from ...fees import Fees
 
 
 ANCHOR_TOP_STR = "top"
@@ -446,7 +447,7 @@ class VarAdaptiveMarketMakerAgent(VarTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=0,
+                    self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=Fees.cal_variable_market_fee(self, self.backstop_quantity, price=bid_price),
                 )
             )
             bid_orders = bid_orders[1:]
@@ -460,7 +461,7 @@ class VarAdaptiveMarketMakerAgent(VarTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=0,
+                    self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=Fees.cal_variable_market_fee(self, self.backstop_quantity, price=ask_price),
                 )
             )
             ask_orders = ask_orders[:-1]
@@ -474,7 +475,7 @@ class VarAdaptiveMarketMakerAgent(VarTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=0,
+                    self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=Fees.cal_variable_market_fee(self, self.buy_order_size, price=bid_price),
                 )
             )
 
@@ -487,7 +488,7 @@ class VarAdaptiveMarketMakerAgent(VarTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=0,
+                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.cal_variable_market_fee(self, self.sell_order_size, price=ask_price),
                 )
             )
 

@@ -274,24 +274,23 @@ class VarValueAgent(VarTradingAgent):
 
             # include fee logic
             if(MIND_FEES == True):
-                mid = 0
-                if bid and ask:
-                    mid = int((ask + bid) / 2)
-                fee = Fees.cal_variable_market_fee(self, self.size, price=p)
+                # mid = 0
+                # if bid and ask:
+                #     mid = int((ask + bid) / 2)
                 if (side == Side.BID):
                     # we are long, e. g. 5 * 1000 - 5 * 998 - 11.90 = -1.9 < 0 do nothing
-                    if((self.size * p) - (self.size * mid) - fee >= 0):
-                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
-                    else: 
-                        return
+                    # if((self.size * p) - (self.size * mid) - fee >= 0):
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=Fees.cal_variable_market_fee(self, self.size, price=p))
+                    # else: 
+                    #     return
                 else:
                     # we are short, e. g. 5 * 998 - 5 * 1000 + 11.90 = 1.9 > 0 do nothing
-                    if((self.size * p) - (self.size * mid) + fee <= 0):
-                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
-                    else:
-                        return
+                    # if((self.size * p) - (self.size * mid) + fee <= 0):
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=Fees.cal_variable_market_fee(self, self.size, price=p))
+                    # else:
+                    #     return
             else:
-                self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                self.place_limit_order(self.symbol, self.size, side, p, order_fee=0)
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message

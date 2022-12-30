@@ -5,9 +5,13 @@
 MAKER_REBATE = -0.2 # $0.002 per share to post liquidity (i.e., 20 cents per 100 shares)
 TAKER_FEE = 0.3 # $0.003 per share to take liquidity (i.e., 30 cents per 100 shares)
 
+# boerse stuttgart group
 VAR_FEE = 0.0095 # 0.95%
 VAR_LIMIT = 110_001 # 1,100.01 $
 VAR_LIMIT_FEE = 1190 # 11.90$
+
+# source: https://www.cmegroup.com/company/clearing-fees.html
+FIX_LIMIT_FEE = 80 # CME equitiy futures 0.80$ per contract on the electronic trading platform GLOBEX 
 
 
 class Fees():
@@ -49,6 +53,11 @@ class Fees():
             else:
                 return VAR_LIMIT_FEE
 
+    """
+        Calculates the market fee for the current order.
+    """
+    def cal_fixed_market_fee(self, quantity, price) -> int:
+        return quantity * FIX_LIMIT_FEE
 
 
 

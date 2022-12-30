@@ -157,11 +157,9 @@ class VarNoiseAgent(VarTradingAgent):
 
         if self.size > 0:
             if buy_indicator == 1 and ask:
-                fee = Fees.cal_variable_market_fee(self, self.size, price=ask)
-                self.place_limit_order(self.symbol, self.size, Side.BID, ask, order_fee=fee)
+                self.place_limit_order(self.symbol, self.size, Side.BID, ask, order_fee=Fees.cal_variable_market_fee(self, self.size, price=ask))
             elif not buy_indicator and bid:
-                fee = Fees.cal_variable_market_fee(self, self.size, price=bid)
-                self.place_limit_order(self.symbol, self.size, Side.ASK, bid, order_fee=fee)
+                self.place_limit_order(self.symbol, self.size, Side.ASK, bid, order_fee=Fees.cal_variable_market_fee(self, self.size, price=bid))
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message

@@ -133,49 +133,47 @@ class VarMomentumAgent(VarTradingAgent):
                     
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
                         # When 20 avg >= 50 avg, buy but if fee added it must be still > 0 e.g. 5 * 1001 - 5 * 1000 = 5 - 11.90 = -6.90 < 0 do nothing
-                        fee = Fees.cal_variable_market_fee(self, self.size, price=ask)
                         if(MIND_FEES == True):
                             # incl fee. must be positive
-                            if((self.size * ask) - (self.size * self.avg_50_list[-1]) - fee >= 0):
-                                self.place_limit_order(
-                                    self.symbol,
-                                    quantity=self.size,
-                                    side=Side.BID,
-                                    limit_price=ask,
-                                    order_fee=fee,
-                                )
-                            else:
-                                return
+                            # if((self.size * ask) - (self.size * self.avg_50_list[-1]) - fee >= 0):
+                            self.place_limit_order(
+                                self.symbol,
+                                quantity=self.size,
+                                side=Side.BID,
+                                limit_price=ask,
+                                order_fee=Fees.cal_variable_market_fee(self, self.size, price=ask),
+                            )
+                            # else:
+                            #     return
                         else:
                             self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.BID,
                                     limit_price=ask,
-                                    order_fee=fee,
+                                    order_fee=0,
                                 )
                     else:
                         # When 20 avg < 50 avg, sell but if fee added it must be still < 0 e.g. 5 * 998 - 5 * 1000 = -10 + 11.90 = 1.90 > 0 do nothing
-                        fee = Fees.cal_variable_market_fee(self, self.size, price=bid)
                         if(MIND_FEES == True):
                             # incl fee. must be negative
-                            if((self.size * bid) - (self.size * self.avg_50_list[-1]) + fee <= 0):         
-                                self.place_limit_order(
-                                    self.symbol,
-                                    quantity=self.size,
-                                    side=Side.ASK,
-                                    limit_price=bid,
-                                    order_fee=fee,
-                                )
-                            else:
-                                return
+                            #if((self.size * bid) - (self.size * self.avg_50_list[-1]) + fee <= 0):         
+                            self.place_limit_order(
+                                self.symbol,
+                                quantity=self.size,
+                                side=Side.ASK,
+                                limit_price=bid,
+                                order_fee=Fees.cal_variable_market_fee(self, self.size, price=bid),
+                            )
+                            # else:
+                            #     return
                         else:
                             self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.ASK,
                                     limit_price=bid,
-                                    order_fee=fee,
+                                    order_fee=0,
                                 )
 
 
