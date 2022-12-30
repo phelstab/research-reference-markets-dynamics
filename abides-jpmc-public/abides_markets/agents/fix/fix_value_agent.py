@@ -7,7 +7,7 @@ from abides_core import Message, NanosecondTime
 
 from ...messages.query import QuerySpreadResponseMsg
 from ...orders import Side
-from .var_trading_agent import VarTradingAgent
+from .fix_trading_agent import FixTradingAgent
 from ...fees import Fees
 
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 MIND_FEES = True 
 
 
-class VarValueAgent(VarTradingAgent):
+class FixValueAgent(FixTradingAgent):
     def __init__(
         self,
         id: int,
@@ -146,7 +146,7 @@ class VarValueAgent(VarTradingAgent):
 
         self.cancel_all_orders()
 
-        if type(self) == VarValueAgent:
+        if type(self) == FixValueAgent:
             self.get_current_spread(self.symbol)
             self.state = "AWAITING_SPREAD"
         else:
@@ -275,20 +275,23 @@ class VarValueAgent(VarTradingAgent):
             if bid and ask:
                 mid = int((ask + bid) / 2)
             else:
-                fee = Fees.cal_variable_market_fee(self, self.size, price=p)
-                self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                fee = Fees.get_fixed_market_fee(self)
+                fee_size = self.size * fee
+                self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
             # include fee logic
             if(MIND_FEES == True):
-                fee = Fees.cal_variable_market_fee(self, self.size, price=p)
-                believed_surplus = (p - mid) * self.size
+                fee = Fees.get_fixed_market_fee(self)
+                fee_size = self.size * fee
                 if (side == Side.BID):
-                    if(believed_surplus - fee >= 0):
-                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                    # long position
+                    if(p - mid - fee >= 0):
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
                     else: 
                         return
                 else:
-                    if(believed_surplus + fee <= 0):
-                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                    # short position
+                    if(p - mid + fee <= 0):
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
                     else:
                         return
             else:

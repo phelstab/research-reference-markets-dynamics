@@ -13,9 +13,9 @@ import datetime
 
 from abides_core import abides
 from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
-from abides_markets.configs import rmsc05MT
+from abides_markets.configs import rmsc05FIX
 
-config = rmsc05MT.build_config(
+config = rmsc05FIX.build_config(
     end_time="16:00:00",
     seed=11111111,
 )

@@ -8,13 +8,13 @@ from abides_core.utils import str_to_ns
 from ...messages.marketdata import MarketDataMsg, L2SubReqMsg
 from ...messages.query import QuerySpreadResponseMsg
 from ...orders import Side
-from .var_trading_agent import VarTradingAgent
+from .fix_trading_agent import FixTradingAgent
 from ...fees import Fees
 
 MIND_FEES = True 
 
 
-class VarMomentumAgent(VarTradingAgent):
+class FixMomentumAgent(FixTradingAgent):
     """
     Simple Trading Agent that compares the 20 past mid-price observations with the 50 past observations and places a
     buy limit order if the 20 mid-price average >= 50 mid-price average or a
@@ -111,11 +111,11 @@ class VarMomentumAgent(VarTradingAgent):
             self.mid_list.append((bid + ask) / 2)
             if len(self.mid_list) > 20:
                 self.avg_20_list.append(
-                    VarMomentumAgent.ma(self.mid_list, n=20)[-1].round(2)
+                    FixMomentumAgent.ma(self.mid_list, n=20)[-1].round(2)
                 )
             if len(self.mid_list) > 50:
                 self.avg_50_list.append(
-                    VarMomentumAgent.ma(self.mid_list, n=50)[-1].round(2)
+                    FixMomentumAgent.ma(self.mid_list, n=50)[-1].round(2)
                 )
             if len(self.avg_20_list) > 0 and len(self.avg_50_list) > 0:
                 if self.order_size_model is not None:
@@ -128,21 +128,18 @@ class VarMomentumAgent(VarTradingAgent):
                 }
                 # check current spread, calculate maker taker,
                 self.logEvent("SPREAD", spread)
-
                 if self.size > 0:
-                    
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
-                        # When 20 avg >= 50 avg, buy but if fee added it must be still > 0 e.g. 5 * 1001 - 5 * 1000 = 5 - 11.90 = -6.90 < 0 do nothing
                         if(MIND_FEES == True):
                             # incl fee. must be positive
-                            fee = Fees.cal_variable_market_fee(self, self.size, price=ask)
+                            fee = Fees.get_fixed_market_fee(self)
                             if(self.avg_20_list[-1] - self.avg_50_list[-1] - fee >= 0):
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.BID,
                                     limit_price=ask,
-                                    order_fee=fee,
+                                    order_fee=fee * self.size,
                                 )
                             else:
                                 return
@@ -155,17 +152,16 @@ class VarMomentumAgent(VarTradingAgent):
                                     order_fee=0,
                                 )
                     else:
-                        # When 20 avg < 50 avg, sell but if fee added it must be still < 0 e.g. 5 * 998 - 5 * 1000 = -10 + 11.90 = 1.90 > 0 do nothing
                         if(MIND_FEES == True):
                             # incl fee. must be negative
-                            fee = Fees.cal_variable_market_fee(self, self.size, price=bid)
+                            fee = Fees.get_fixed_market_fee(self)
                             if(self.avg_20_list[-1] - self.avg_50_list[-1] + fee <= 0):         
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.ASK,
                                     limit_price=bid,
-                                    order_fee=fee,
+                                    order_fee=fee * self.size,
                                 )
                             else:
                                 return

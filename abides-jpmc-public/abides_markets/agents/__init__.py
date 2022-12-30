@@ -43,6 +43,10 @@ from .nofee.nf_momentum_agent import NFMomentumAgent
 from .nofee.nf_noise_agent import NFNoiseAgent
 from .nofee.nf_value_agent import NFValueAgent
 from .nofee.nf_trading_agent import NFTradingAgent
-
+from .fix.fix_adaptive_market_maker_agent import FixAdaptiveMarketMakerAgent
+from .fix.fix_momentum_agent import FixMomentumAgent
+from .fix.fix_noise_agent import FixNoiseAgent
+from .fix.fix_value_agent import FixValueAgent
+from .fix.fix_trading_agent import FixTradingAgent
 
 from .execution.pov_execution_agent import POVExecutionAgent

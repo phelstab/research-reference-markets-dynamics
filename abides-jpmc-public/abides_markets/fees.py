@@ -56,8 +56,8 @@ class Fees():
     """
         Calculates the market fee for the current order.
     """
-    def cal_fixed_market_fee(self, quantity, price) -> int:
-        return quantity * FIX_LIMIT_FEE
+    def get_fixed_market_fee(self) -> int:
+        return FIX_LIMIT_FEE
 
 
 

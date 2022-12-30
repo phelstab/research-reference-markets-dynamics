@@ -14,10 +14,10 @@ import pandas as pd
 from abides_core.utils import get_wake_time, str_to_ns
 from abides_markets.agents import (
     ExchangeAgent,
-    VarNoiseAgent,
-    VarValueAgent,
-    VarMomentumAgent,
-    VarAdaptiveMarketMakerAgent,
+    FixNoiseAgent,
+    FixValueAgent,
+    FixMomentumAgent,
+    FixAdaptiveMarketMakerAgent,
 )
 from abides_markets.models import OrderSizeModel
 from abides_markets.oracles import SparseMeanRevertingOracle
@@ -31,7 +31,7 @@ from abides_markets.utils import generate_latency_model
 def build_config(
     seed=int(datetime.now().timestamp() * 1_000_000) % (2 ** 32 - 1),
     date="20210205",
-    end_time="10:00:00",
+    end_time="16:00:00",
     stdout_log_level="INFO",
     ticker="ABM",
     starting_cash=10_000_000,  # Cash in this simulator is always in CENTS.
@@ -167,7 +167,7 @@ def build_config(
 
     agents.extend(
         [
-            VarNoiseAgent(
+            FixNoiseAgent(
                 id=j,
                 name="NoiseAgent {}".format(j),
                 type="NoiseAgent",
@@ -188,7 +188,7 @@ def build_config(
 
     agents.extend(
         [
-            VarValueAgent(
+            FixValueAgent(
                 id=j,
                 name="Value Agent {}".format(j),
                 type="ValueAgent",
@@ -212,7 +212,7 @@ def build_config(
 
     agents.extend(
         [
-            VarAdaptiveMarketMakerAgent(
+            FixAdaptiveMarketMakerAgent(
                 id=j,
                 name="ADAPTIVE_POV_MARKET_MAKER_AGENT_{}".format(j),
                 type="AdaptivePOVMarketMakerAgent",
@@ -243,7 +243,7 @@ def build_config(
 
     agents.extend(
         [
-            VarMomentumAgent(
+            FixMomentumAgent(
                 id=j,
                 name="MOMENTUM_AGENT_{}".format(j),
                 type="MomentumAgent",
