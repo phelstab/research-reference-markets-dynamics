@@ -1,3 +1,5 @@
+import math
+
 """
     Fees for different exchanges
 """
@@ -5,7 +7,7 @@
 MAKER_REBATE = -0.2 # $0.002 per share to post liquidity (i.e., 20 cents per 100 shares)
 TAKER_FEE = 0.3 # $0.003 per share to take liquidity (i.e., 30 cents per 100 shares)
 
-# boerse stuttgart group
+# boerse stuttgart group (european style variable fees for options)
 VAR_FEE = 0.0095 # 0.95%
 VAR_LIMIT = 110_001 # 1,100.01 $
 VAR_LIMIT_FEE = 1190 # 11.90$
@@ -34,9 +36,9 @@ class Fees():
 
     def cal_maker_taker_market_fee(self, quantity, type) -> int:
         if type == 0:
-            return MAKER_REBATE * quantity
+            return math.floor(MAKER_REBATE * quantity)
         else:
-            return TAKER_FEE * quantity
+            return math.ceil(TAKER_FEE * quantity)
 
     
     """
@@ -49,7 +51,7 @@ class Fees():
         else:
             fee = volume * VAR_FEE
             if(fee < VAR_LIMIT_FEE):
-                return fee
+                return math.ceil(fee)
             else:
                 return VAR_LIMIT_FEE
 

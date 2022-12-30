@@ -157,10 +157,10 @@ class MTNoiseAgent(MTTradingAgent):
 
         if self.size > 0:
             if buy_indicator == 1 and ask:
-                fee = Fees.cal_variable_market_fee(self, self.size, price=ask)
+                fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
                 self.place_limit_order(self.symbol, self.size, Side.BID, ask, order_fee=fee)
             elif not buy_indicator and bid:
-                fee = Fees.cal_variable_market_fee(self, self.size, price=bid)
+                fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
                 self.place_limit_order(self.symbol, self.size, Side.ASK, bid, order_fee=fee)
 
     def receive_message(

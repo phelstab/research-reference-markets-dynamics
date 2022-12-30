@@ -13,7 +13,7 @@ from ...fees import Fees
 
 logger = logging.getLogger(__name__)
 
-MIND_FEES = False 
+MIND_FEES = True 
 
 
 class MTValueAgent(MTTradingAgent):
@@ -278,24 +278,24 @@ class MTValueAgent(MTTradingAgent):
                 if bid and ask:
                     mid = int((ask + bid) / 2)
                 else:
-                    mid = self.get_last_trade(self.symbol)
+                    #mid = self.get_last_trade(self.symbol)
+                    fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=0)
+                    self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                 if (side == Side.BID):
-                    # we are long, e. g. 5 * 1000 - 5 * 998 - 11.90 = -1.9 < 0 do nothing
                     b_maker_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=bid, current_best_ask=ask, side=Side.BID)
                     fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
                     if(b_maker_taker == 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
-                    elif((self.size * p) - (self.size * mid) - fee >= 0):
+                    elif(p - mid - fee >= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                     else: 
                         return
                 else:
-                    # we are short, e. g. 5 * 998 - 5 * 1000 + 11.90 = 1.9 > 0 do nothing
                     b_maker_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=bid, current_best_ask=ask, side=Side.ASK)
                     fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
                     if(b_maker_taker == 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
-                    elif((self.size * p) - (self.size * mid) + fee <= 0):
+                    elif(p - mid + fee <= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                     else:
                         return

@@ -18,6 +18,7 @@ from ...messages.query import QuerySpreadResponseMsg, QueryTransactedVolResponse
 from ...orders import Side
 from .mt_trading_agent import MTTradingAgent
 
+from ...fees import Fees
 
 ANCHOR_TOP_STR = "top"
 ANCHOR_BOTTOM_STR = "bottom"
@@ -25,8 +26,6 @@ ANCHOR_MIDDLE_STR = "middle"
 
 ADAPTIVE_SPREAD_STR = "adaptive"
 INITIAL_SPREAD_VALUE = 50
-
-MIND_FEES = False 
 
 logger = logging.getLogger(__name__)
 
@@ -447,7 +446,7 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=0,
+                    self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.backstop_quantity, type=0),
                 )
             )
             bid_orders = bid_orders[1:]
@@ -461,7 +460,7 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=0,
+                    self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.backstop_quantity, type=0),
                 )
             )
             ask_orders = ask_orders[:-1]
@@ -475,7 +474,7 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=0,
+                    self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.buy_order_size, type=0),
                 )
             )
 
@@ -488,16 +487,9 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=0,
+                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.buy_order_size, type=0),
                 )
             )
-
-        # for each order get the 
-        # 1. limit price
-        # 2. order side
-        # 3. order size
-        # 4. current best bid and ask
-
 
         self.place_multiple_orders(orders)
 

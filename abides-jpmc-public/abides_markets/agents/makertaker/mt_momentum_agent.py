@@ -11,7 +11,7 @@ from ...orders import Side
 from .mt_trading_agent import MTTradingAgent
 from ...fees import Fees
 
-MIND_FEES = False 
+MIND_FEES = True 
 
 
 class MTMomentumAgent(MTTradingAgent):
@@ -128,16 +128,13 @@ class MTMomentumAgent(MTTradingAgent):
                 }
                 # check current spread, calculate maker taker,
                 self.logEvent("SPREAD", spread)
-
                 if self.size > 0:
-                    
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
-                        # When 20 avg >= 50 avg, buy but if fee added it must be still > 0 e.g. 5 * 1001 - 5 * 1000 = 5 - 11.90 = -6.90 < 0 do nothing
                         b_maker_taker = Fees.cal_maker_taker_order(self, price=ask, current_best_bid=bid, current_best_ask=ask, side=Side.BID)
                         fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
                         if(MIND_FEES == True):
                             # incl fee. must be positive
-                            if((self.size * ask) - (self.size * self.avg_50_list[-1]) - fee >= 0):
+                            if(self.avg_20_list[-1] - self.avg_50_list[-1] - fee >= 0):
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -156,12 +153,11 @@ class MTMomentumAgent(MTTradingAgent):
                                     order_fee=0,
                                 )
                     else:
-                        # When 20 avg < 50 avg, sell but if fee added it must be still < 0 e.g. 5 * 998 - 5 * 1000 = -10 + 11.90 = 1.90 > 0 do nothing
                         b_maker_taker = Fees.cal_maker_taker_order(self, price=bid, current_best_bid=bid, current_best_ask=ask, side=Side.ASK)
                         fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
                         if(MIND_FEES == True):
                             # incl fee. must be negative
-                            if((self.size * bid) - (self.size * self.avg_50_list[-1]) + fee <= 0):         
+                            if(self.avg_20_list[-1] - self.avg_50_list[-1] + fee <= 0):         
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
