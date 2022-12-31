@@ -17,7 +17,7 @@ from abides_markets.configs import rmsc05nofee
 
 config = rmsc05nofee.build_config(
     end_time="16:00:00",
-    seed=11111111,
+    seed=1337,
 )
 
 config.keys()
@@ -248,7 +248,7 @@ average_fill_rate = order_executed_only_full_executed['fill_rate'].mean()
 order_executed_only_full_executed = order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
 fig_speed = go.Figure()
 fig_speed.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (nanoseconds)')
+fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (ms)')
 fig_fill_rate= go.Figure()
 fig_fill_rate.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
 fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
