@@ -307,6 +307,11 @@ class OrderBook:
 
             # check if all not 0
             if best_bid_pre != -1 and best_ask_pre != -1 and best_bid_post != -1 and best_ask_post != -1:            
+                if order.side == Side.BID:
+                    d_t = 1
+                elif order.side == Side.ASK:
+                    d_t = -1
+                
                 # calculate the price impact of the execution, realized spread, and realized mid price
                 realized_mid_price_pre = (best_ask_pre + best_bid_pre) / 2
                 realized_mid_price_post = (best_ask_post + best_bid_post) / 2
@@ -323,16 +328,21 @@ class OrderBook:
                 )
 
                 # realized spread 
-                rel = 2 * (realized_mid_price_post - matched_order.fill_price) / (realized_mid_price_pre) * 100
+                rel = 2 * (matched_order.fill_price - realized_mid_price_post) / (realized_mid_price_post) * 100
+                #rel = 100 * d_t * ((matched_order.fill_price - realized_mid_price_post) / realized_mid_price_pre)
                 # effective spread
-                eff = 2 * (matched_order.fill_price - realized_mid_price_post) / (realized_mid_price_post) * 100
-                # quoted spread
-                quo = ((best_ask_post - best_bid_post) / realized_mid_price_post) * 100
+                eff = 2 * (matched_order.fill_price - realized_mid_price_pre) / (realized_mid_price_pre) * 100
+                #eff = 100 * d_t * ((matched_order.fill_price - realized_mid_price_pre) / realized_mid_price_pre)
+                # Price impact of trade
+                imp = 100 * d_t * ((realized_mid_price_post - realized_mid_price_pre) / realized_mid_price_pre)
+                # quoted half spread
+                quo = 100 * (best_ask_post - best_bid_post) / (2 * realized_mid_price_post)
                 # log the spreads
                 exec_spreads = {"order_id": matched_order.order_id,
                 "time": self.owner.current_time,
                 "realized_spread": rel,
                 "effective_spread": eff,
+                "price_impact": imp,
                 "quoted_spread": quo}
                 self.owner.logEvent("EXECUTION_SPREAD", exec_spreads)
                         

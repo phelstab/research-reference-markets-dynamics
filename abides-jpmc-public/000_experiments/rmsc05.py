@@ -17,7 +17,7 @@ from abides_markets.configs import rmsc05nofee
 
 config = rmsc05nofee.build_config(
     end_time="16:00:00",
-    seed=1337,
+    seed=11111111,
 )
 
 config.keys()
@@ -236,7 +236,7 @@ order_executed_only_full_executed['placed_quantity'] = order_executed_only_full_
 # filter order_executed_only_full_executed by order_id but only take the latest time_placed order
 order_executed_only_full_executed = order_executed_only_full_executed.groupby(['order_id']).tail(1).reset_index()
 # time placed - time_executed and add new column to order_executed_only_full_executed
-order_executed_only_full_executed['speed_of_fill'] = ((order_executed_only_full_executed['time_executed'] - order_executed_only_full_executed['time_placed']).div(1000000))
+order_executed_only_full_executed['speed_of_fill'] = (order_executed_only_full_executed['time_executed'] - order_executed_only_full_executed['time_placed'])
 # convert to milliseconds
 order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e6)
 # Likelihood of a fill == fill rate Fill rate = (partial_execution / placed_quantity) * 100
