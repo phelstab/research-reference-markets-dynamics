@@ -182,6 +182,15 @@ python rmsc05_var.py
 # 8.3 open post analysis dashboard in your browser
 ```
 
+Overview of different experiments in the 000_experiments folder:
+```sh
+python rmsc05.py #(base model no fees)
+
+python rmsc05_fix.py #(fix market fees, single exchange)
+python rmsc05_var.py #(varaible market fees, single exchange)
+python rmsc05_mt.py #(maker taker market fees, single exchange)
+
+```
 
 === Conventions
 
