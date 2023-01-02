@@ -197,9 +197,9 @@ executed_orders = executed_orders.sort_values(by=['time_executed']).reset_index(
 executed_orders['count'] = 1
 executed_orders['cumsum_order_qty'] = executed_orders['count'].cumsum()
 executed_orders['cumsum_qty'] = executed_orders['quantity'].cumsum()
+executed_orders['cumsum_qty'] = executed_orders['cumsum_qty'].div(100)
 executed_orders['order_fee'] = executed_orders['order_fee'].div(100)
 executed_orders['cumsum_order_fee'] = executed_orders['order_fee'].cumsum()
-executed_orders.drop(columns=['count'], inplace=True)
 
 execution_spreads = logs_df[logs_df.EventType.isin(["EXECUTION_SPREAD"])]
 # sort by time ascending and reset index
@@ -211,9 +211,9 @@ average_effective_spreads = execution_spreads['effective_spread'].mean()
 # average of quoted spreads
 average_quoted_spreads = execution_spreads['quoted_spread'].mean()
 fig_spreads = go.Figure()
-fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='% Realized spreads'))
-fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='% Effective spreads'))
-fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='% Quoted spreads'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
 fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spreads')
 
 """
@@ -238,7 +238,7 @@ order_executed_only_full_executed = order_executed_only_full_executed.groupby(['
 # time placed - time_executed and add new column to order_executed_only_full_executed
 order_executed_only_full_executed['speed_of_fill'] = (order_executed_only_full_executed['time_executed'] - order_executed_only_full_executed['time_placed'])
 # convert to milliseconds
-order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e6)
+order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e9)
 # Likelihood of a fill == fill rate Fill rate = (partial_execution / placed_quantity) * 100
 order_executed_only_full_executed['fill_rate'] = (order_executed_only_full_executed['quantity'].div(order_executed_only_full_executed['placed_quantity'])).mul(100)
 # average of speed_of_fill 
@@ -331,6 +331,104 @@ def exchange_0_info_2() -> html.Div:
         ) 
 
 Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
+
+
+"""
+    Update the figures
+"""
+treemap = get_treemap_fig()
+
+fig_speed.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Speed (in sec.)",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+fig_fill_rate.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Fill Rate (in %)",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+fig_spreads.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Spreads (in %)",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+fig_executed_order.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Trading Vol. (in $)",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+fig_executed_order_qty.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Order Qty.",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+fig_exchange_turnover.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Turnaround (in $)",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+Ex_0_orderbook.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Cumulative Order Qty.",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+Ex_0_fig.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Price (in $)",
+    font=dict(
+        family="Times New Roman",
+        size=22,
+        color="#0d0d0d",
+    )
+)
+
+treemap.update_layout(
+    title="",
+)
 
 # Design the app layout
 app.layout = html.Div(

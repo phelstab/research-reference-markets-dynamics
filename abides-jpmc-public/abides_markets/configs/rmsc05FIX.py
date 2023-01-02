@@ -31,7 +31,7 @@ from abides_markets.utils import generate_latency_model
 def build_config(
     seed=int(datetime.now().timestamp() * 1_000_000) % (2 ** 32 - 1),
     date="20210205",
-    end_time="16:00:00",
+    end_time="10:00:00",
     stdout_log_level="INFO",
     ticker="ABM",
     starting_cash=10_000_000,  # Cash in this simulator is always in CENTS.
@@ -42,9 +42,9 @@ def build_config(
     stream_history_length=500,
     exchange_log_orders=None,
     # 2) Noise Agent
-    num_noise_agents=2000,
+    num_noise_agents=8000,
     # 3) Value Agents
-    num_value_agents=50,
+    num_value_agents=400,
     r_bar=100_000,  # true mean fundamental value
     kappa=1.67e-15,  # Value Agents appraisal of mean-reversion
     lambda_a=5.7e-12,  # ValueAgent arrival rate
@@ -69,7 +69,7 @@ def build_config(
     mm_backstop_quantity=0,
     mm_cancel_limit_delay=50,  # 50 nanoseconds
     # 5) Momentum Agents
-    num_momentum_agents=5,
+    num_momentum_agents=10,
 ):
     """
     create the background configuration for rmsc04
