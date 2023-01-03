@@ -42,9 +42,9 @@ def build_config(
     stream_history_length=500,
     exchange_log_orders=None,
     # 2) Noise Agent
-    num_noise_agents=8000,
+    num_noise_agents=1000,
     # 3) Value Agents
-    num_value_agents=800,
+    num_value_agents=150,
     r_bar=100_000,  # true mean fundamental value
     kappa=1.67e-15,  # Value Agents appraisal of mean-reversion
     lambda_a=5.7e-12,  # ValueAgent arrival rate

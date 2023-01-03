@@ -10,6 +10,7 @@ from ...orders import Side
 from .var_trading_agent import VarTradingAgent
 from ...fees import Fees
 
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -277,19 +278,36 @@ class VarValueAgent(VarTradingAgent):
             else:
                 fee = Fees.cal_variable_market_fee(self, self.size, price=p)
                 self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                return
             # include fee logic
             if(MIND_FEES == True):
                 fee = Fees.cal_variable_market_fee(self, self.size, price=p)
-                believed_surplus = (p - mid) * self.size
+                market_surplus = (p - mid) * self.size
                 if (side == Side.BID):
-                    if(believed_surplus - fee >= 0):
+                    if(fee == 0 or market_surplus - fee >= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                        return
+                    elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                        # adjust the price
+                        price_adjust = (market_surplus * (-1) + fee) / (fee)
+                        price_adjust = math.ceil(price_adjust)
+                        self.place_limit_order(self.symbol, self.size, side, p+price_adjust, order_fee=fee)
+                        return
                     else: 
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                         return
                 else:
-                    if(believed_surplus + fee <= 0):
+                    if(fee == 0 or market_surplus + fee <= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
-                    else:
+                        return
+                    elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                        # adjust the price
+                        price_adjust = (market_surplus * (-1) + fee) / (fee)
+                        price_adjust = math.ceil(price_adjust)
+                        self.place_limit_order(self.symbol, self.size, side, p-price_adjust, order_fee=fee)
+                        return
+                    else: 
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
                         return
             else:
                 self.place_limit_order(self.symbol, self.size, side, p, order_fee=0)

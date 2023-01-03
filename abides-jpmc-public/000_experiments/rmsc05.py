@@ -335,105 +335,187 @@ fig_speed.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
     yaxis_title="Speed (in sec.)",
-    font=dict(
+    yaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=35,
         color="#0d0d0d",
-    )
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
 )
 
 fig_fill_rate.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
     yaxis_title="Fill Rate (in %)",
-    font=dict(
+    yaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=35,
         color="#0d0d0d",
-    )
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
 )
 
 fig_spreads.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
     yaxis_title="Spreads (in %)",
-    font=dict(
+    yaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=35,
         color="#0d0d0d",
-    )
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
 )
 
-fig_executed_order.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Securities Executed Qty.",
-    font=dict(
-        family="Times New Roman",
-        size=22,
-        color="#0d0d0d",
-    )
-)
-
-fig_executed_order_qty.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Order Qty.",
-    font=dict(
-        family="Times New Roman",
-        size=22,
-        color="#0d0d0d",
-    )
-)
 
 fig_exchange_turnover.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
     yaxis_title="Turnaround (in $)",
-    font=dict(
+    yaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=35,
         color="#0d0d0d",
-    )
-)
-
-fig_exchange_volume.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Order Volume (in $)",
-    font=dict(
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=15,
         color="#0d0d0d",
-    )
+        ),
+    ),
 )
 
 Ex_0_orderbook.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
-    yaxis_title="Cumulative Order Qty.",
-    font=dict(
+    yaxis_title="Cum. Order Qty.",
+    yaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=35,
         color="#0d0d0d",
-    )
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
 )
 
 Ex_0_fig.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
     yaxis_title="Price (in $)",
-    font=dict(
+    yaxis = dict(
+        tickfont=dict(
         family="Times New Roman",
-        size=22,
+        size=35,
         color="#0d0d0d",
-    )
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
 )
 
 treemap.update_layout(
     title="",
 )
 
+fig_executed_order.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Cum. Traded Qty.",
+    yaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=35,
+        color="#0d0d0d",
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
+)
+
+fig_executed_order_qty.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Order Qty.",
+    yaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=35,
+        color="#0d0d0d",
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
+)
+
+
+fig_exchange_volume.update_layout(
+    title="",
+    xaxis_title="Time Steps (ns)",
+    yaxis_title="Executed Order Vol. (in $)",
+    yaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=35,
+        color="#0d0d0d",
+        ),
+    ),
+    xaxis = dict(
+        tickfont=dict(
+        family="Times New Roman",
+        size=15,
+        color="#0d0d0d",
+        ),
+    ),
+)
 
 # Design the app layout
 app.layout = html.Div(

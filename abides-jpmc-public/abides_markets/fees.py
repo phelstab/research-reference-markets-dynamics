@@ -15,6 +15,7 @@ VAR_LIMIT_FEE = 1190 # 11.90$
 # source: https://www.cmegroup.com/company/clearing-fees.html
 FIX_LIMIT_FEE = 9 # CME equitiy futures 0.80$ per contract on the electronic trading platform GLOBEX 
 
+PERCENT = 0.5
 
 class Fees():
     """
@@ -61,6 +62,8 @@ class Fees():
     def get_fixed_market_fee(self) -> int:
         return FIX_LIMIT_FEE
 
+    def get_ign_prob(self) -> float:
+        return PERCENT
 
 
 # e0_fee = Fees.cal_variable_market_fee(self, price=p, quantity=self.size)

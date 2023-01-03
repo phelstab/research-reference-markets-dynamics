@@ -13,17 +13,26 @@ import datetime
 
 from abides_core import abides
 from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
-from abides_markets.configs import rmsc05MT
+from abides_markets.configs import rmsc05FIX
+import plotly
+from subprocess import call
+import json
 
-config = rmsc05MT.build_config(
-    end_time="16:00:00",
-    seed=11111111,
+__seed = 1337
+
+config = rmsc05FIX.build_config(
+    end_time="10:00:00",
+    seed=__seed,
 )
 
 config.keys()
 end_state = abides.run(config)
 
 logs_df = parse_logs_df( end_state )
+
+
+
+
 
 """
     Get the Order book from the Exchange 0.
@@ -176,10 +185,16 @@ Ex0_best_asks = pd.DataFrame(Ex_0_L1["best_asks"],columns=["time","price","qty"]
 # divide all prices by 100 
 Ex0_best_bids['price'] = Ex0_best_bids['price'].div(100)
 Ex0_best_asks['price'] = Ex0_best_asks['price'].div(100)
+# remove all nan values
+# Ex0_best_bids = Ex0_best_bids.dropna()
+# Ex0_best_asks = Ex0_best_asks.dropna()
+# remove all time duplicates
+# Ex0_best_bids = Ex0_best_bids.drop_duplicates(subset=['time'])
+# Ex0_best_asks = Ex0_best_asks.drop_duplicates(subset=['time'])
 Ex_0_fig = go.Figure()
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_asks["price"], mode='markers', marker_size=3, name='best_asks'))
-Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time', yaxis_title='Price')
+Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time Steps (ns)', yaxis_title='Price')
 
 
 """
@@ -187,13 +202,14 @@ Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time', yax
 """
 executed_orders =  logs_df[(logs_df.EventType=="ORDER_EXECUTED")]
 executed_orders = executed_orders.sort_values(by=['time_executed']).reset_index()
+
 executed_orders['count'] = 1
 executed_orders['cumsum_order_qty'] = executed_orders['count'].cumsum()
 executed_orders['cumsum_qty'] = executed_orders['quantity'].cumsum()
-executed_orders['volume'] = executed_orders['quantity'].mul(executed_orders['fill_price'].div(100))
-executed_orders['cumsum_volume'] = executed_orders['volume'].cumsum()
+executed_orders['cumsum_qty'] = executed_orders['cumsum_qty'].div(100)
 executed_orders['order_fee'] = executed_orders['order_fee'].div(100)
 executed_orders['cumsum_order_fee'] = executed_orders['order_fee'].cumsum()
+executed_orders.drop(columns=['count'], inplace=True)
 
 execution_spreads = logs_df[logs_df.EventType.isin(["EXECUTION_SPREAD"])]
 # sort by time ascending and reset index
@@ -208,7 +224,7 @@ fig_spreads = go.Figure()
 fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
 fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
 fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spreads')
+fig_spreads.update_layout(title='Spreads', xaxis_title='Time Steps (ns)', yaxis_title='Spreads (in ms)')
 
 """
     Speed of fills and fill rate
@@ -242,10 +258,10 @@ average_fill_rate = order_executed_only_full_executed['fill_rate'].mean()
 order_executed_only_full_executed = order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
 fig_speed = go.Figure()
 fig_speed.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (ms)')
+fig_speed.update_layout(title='Speed of executions', xaxis_title='Time Steps (ns)', yaxis_title='Speed (in ms)')
 fig_fill_rate= go.Figure()
 fig_fill_rate.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
+fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time Steps (ns)', yaxis_title=r"""\(executionFillRate = (\frac{executedQty}{orderQty})*100\)""")
 
 
 
@@ -254,15 +270,15 @@ fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time',
 """
 fig_executed_order = go.Figure()
 fig_executed_order.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders["cumsum_qty"], mode='lines', line_color="#ad0000"))
+fig_executed_order.update_layout(title='Executed orders trading volumes', xaxis_title='Time Steps (ns)', yaxis_title='Trading Vol. (in $)')
 
 fig_executed_order_qty = go.Figure()
 fig_executed_order_qty.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders["cumsum_order_qty"], mode='lines', line_color="#a800ad"))
+fig_executed_order_qty.update_layout(title='Executed orders quantity', xaxis_title='Time Steps (ns)', yaxis_title='Order Qty.')
 
 fig_exchange_turnover = go.Figure()
 fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders['cumsum_order_fee'], mode='lines', line_color="#01661e"))
-
-fig_exchange_volume = go.Figure()
-fig_exchange_volume.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders['cumsum_volume'], mode='lines', line_color="#016657"))
+fig_exchange_turnover.update_layout(title='Market fees turnover', xaxis_title='Time Steps (ns)', yaxis_title='Turnaround (in $)')
 
 
 
@@ -280,303 +296,25 @@ colors = {
     'text': '#7FDBFF'
 }
 
-ex_0_info = ex_0_name + " Orderbook Imbalance: " + str(ex_0_ob_imbalance)
-ex_0_average_realized_spreads = "Average realized spreads: " + str(average_realized_spreads)
-ex_0_average_effective_spreads = "Average effective spreads: " + str(average_effective_spreads)
-ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_spreads)
-ex_0_average_speed_of_fill = "Average speed of execution: " + str(average_speed_of_fill)
+ex_0_info = ex_0_name + " Orderbook Imbalance(in %): " + str(ex_0_ob_imbalance)
+ex_0_average_realized_spreads = "Average realized spreads(in %): " + str(average_realized_spreads)
+ex_0_average_effective_spreads = "Average effective spreads(in %): " + str(average_effective_spreads)
+ex_0_average_quoted_spreads = "Average quoted spreads (in %): " + str(average_quoted_spreads)
+ex_0_average_speed_of_fill = "Average speed of execution (in sec.): " + str(average_speed_of_fill)
 ex_0_average_fill_rate = "Average fill rate: " + str(average_fill_rate)
 
-def exchange_0_info() -> html.Div:
-        return html.Div(
-            children=[
-                html.Span(
-                    ex_0_info,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_quoted_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_effective_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_realized_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-                # html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
-                # ,
-            ]
-        ) 
-def exchange_0_info_2() -> html.Div:
-        return html.Div(
-            children=[
-                html.Span(
-                    ex_0_average_speed_of_fill,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_fill_rate,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-            ]
-        ) 
-
-Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
-
-"""
-    Update the figures
-"""
-treemap = get_treemap_fig()
-
-fig_speed.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Speed (in sec.)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-
-fig_fill_rate.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Fill Rate (in %)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-
-fig_spreads.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Spreads (in %)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
 
 
-fig_exchange_turnover.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Turnaround (in $)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-
-Ex_0_orderbook.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Cum. Order Qty.",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-
-Ex_0_fig.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Price (in $)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-
-treemap.update_layout(
-    title="",
-)
-
-fig_executed_order.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Cum. Traded Qty.",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-
-fig_executed_order_qty.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Order Qty.",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
 
 
-fig_exchange_volume.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Executed Order Vol. (in $)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
 
-# Design the app layout
-app.layout = html.Div(
-    [
-        dbc.Row([
-            Header_component,
-        ]),
-        dbc.Row([
-            exchange_0_info(),
-        ]),
-        dbc.Row([
-            exchange_0_info_2(),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph1', figure=get_treemap_fig(), config= {'displaylogo': False}),
-            ),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph2', figure=Ex_0_fig, config= {'displaylogo': False}),
-            ),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph3', figure=Ex_0_orderbook, config= {'displaylogo': False}),
-            ),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph4', figure=fig_exchange_turnover, config= {'displaylogo': False}),
-            ),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph5', figure=fig_executed_order_qty, config= {'displaylogo': False}),
-            ),
-            dbc.Col(
-                dcc.Graph(id='the_graph6', figure=fig_executed_order, config= {'displaylogo': False}),
-            ),
-            dbc.Col(
-                dcc.Graph(id='the_graph7', figure=fig_exchange_volume, config= {'displaylogo': False}),
-            ),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph8', figure=fig_spreads, config= {'displaylogo': False}),
-            ),
-        ]),
-        dbc.Row([
-            dbc.Col(
-                dcc.Graph(id='the_graph9', figure=fig_speed, config= {'displaylogo': False}),
-            ),
-            dbc.Col(
-                dcc.Graph(id='the_graph10', figure=fig_fill_rate, config= {'displaylogo': False}),
-            ),
-        ]),
-    ]
-)
-
-app._favicon = ('icon.ico')
-
-# Run the app
-app.run_server(debug=False)
+plotly.io.write_image(treemap, "./experiment_images/nofee/nf_" + str(__seed) + "_treemap.png", engine="kaleido")
+plotly.io.write_image(Ex_0_fig, "./experiment_images/nofee/nf_" + str(__seed) + "_timeseries.svg", engine="kaleido")
+plotly.io.write_image(Ex_0_orderbook, "./experiment_images/nofee/nf_" + str(__seed) + "_orderbook.eps", engine="kaleido")
+plotly.io.write_image(fig_exchange_turnover, "./experiment_images/nofee/nf_" + str(__seed) + "_turnover.eps", engine="kaleido")
+plotly.io.write_image(fig_executed_order_qty, "./experiment_images/nofee/nf_" + str(__seed) + "_order_qty.eps", engine="kaleido")
+plotly.io.write_image(fig_executed_order, "./experiment_images/nofee/nf_" + str(__seed) + "_order_volume.eps", engine="kaleido")
+plotly.io.write_image(fig_spreads, "./experiment_images/nofee/nf_" + str(__seed) + "_spreads.eps", engine="kaleido")
+plotly.io.write_image(fig_speed, "./experiment_images/nofee/nf_" + str(__seed) + "_speed.eps", engine="kaleido")
+plotly.io.write_image(fig_fill_rate, "./experiment_images/nofee/nf_" + str(__seed) + "_fill_rate.eps", engine="kaleido")
+plotly.io.write_image(fig_exchange_volume, "./experiment_images/nofee/nf_" + str(__seed) + "_order_volume.eps", engine="kaleido")

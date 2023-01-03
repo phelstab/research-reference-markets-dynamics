@@ -133,7 +133,8 @@ class FixMomentumAgent(FixTradingAgent):
                         if(MIND_FEES == True):
                             # incl fee. must be positive
                             fee = Fees.get_fixed_market_fee(self)
-                            if(self.avg_20_list[-1] - self.avg_50_list[-1] - fee >= 0):
+                            diff = self.avg_20_list[-1] - self.avg_50_list[-1]
+                            if(diff - fee >= 0):
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -141,7 +142,25 @@ class FixMomentumAgent(FixTradingAgent):
                                     limit_price=ask,
                                     order_fee=fee * self.size,
                                 )
+                                return
+                            # agent places with a 50% chance at a price priced the fee inclusive 
+                            elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    limit_price=ask+fee,
+                                    order_fee=fee * self.size,
+                                )
+                                return
                             else:
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    limit_price=ask,
+                                    order_fee=fee * self.size,
+                                )
                                 return
                         else:
                             self.place_limit_order(
@@ -155,7 +174,8 @@ class FixMomentumAgent(FixTradingAgent):
                         if(MIND_FEES == True):
                             # incl fee. must be negative
                             fee = Fees.get_fixed_market_fee(self)
-                            if(self.avg_20_list[-1] - self.avg_50_list[-1] + fee <= 0):         
+                            diff = self.avg_20_list[-1] - self.avg_50_list[-1]
+                            if(diff + fee <= 0):         
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -163,7 +183,25 @@ class FixMomentumAgent(FixTradingAgent):
                                     limit_price=bid,
                                     order_fee=fee * self.size,
                                 )
+                                return
+                            # agent places with a 50% chance at a price priced the fee inclusive 
+                            elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    limit_price=bid-fee,
+                                    order_fee=fee * self.size,
+                                )
+                                return
                             else:
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    limit_price=bid,
+                                    order_fee=fee * self.size,
+                                )
                                 return
                         else:
                             self.place_limit_order(

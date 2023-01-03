@@ -286,13 +286,23 @@ class FixValueAgent(FixTradingAgent):
                     # long position
                     if(p - mid - fee >= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
-                    else: 
+                        return
+                    elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                        self.place_limit_order(self.symbol, self.size, side, p+fee, order_fee=fee_size)
+                        return
+                    else:
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
                         return
                 else:
                     # short position
                     if(p - mid + fee <= 0):
                         self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
+                        return
+                    elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                        self.place_limit_order(self.symbol, self.size, side, p-fee, order_fee=fee_size)
+                        return
                     else:
+                        self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
                         return
             else:
                 self.place_limit_order(self.symbol, self.size, side, p, order_fee=0)

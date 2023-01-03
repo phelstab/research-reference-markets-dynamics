@@ -130,11 +130,10 @@ class MTMomentumAgent(MTTradingAgent):
                 self.logEvent("SPREAD", spread)
                 if self.size > 0:
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
-                        b_maker_taker = Fees.cal_maker_taker_order(self, price=ask, current_best_bid=bid, current_best_ask=ask, side=Side.BID)
-                        fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
                         if(MIND_FEES == True):
-                            # incl fee. must be positive
-                            if(self.avg_20_list[-1] - self.avg_50_list[-1] - fee >= 0):
+                            fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                            diff = self.avg_20_list[-1] - self.avg_50_list[-1]
+                            if(diff - fee >= 0):
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -142,8 +141,27 @@ class MTMomentumAgent(MTTradingAgent):
                                     limit_price=ask,
                                     order_fee=fee,
                                 )
-                            else:
                                 return
+                            elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                                fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=0)
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    limit_price=ask+5,
+                                    order_fee=fee,
+                                )
+                                return
+                            else:
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    limit_price=ask,
+                                    order_fee=fee,
+                                )
+                                return
+
                         else:
                             self.place_limit_order(
                                     self.symbol,
@@ -153,11 +171,10 @@ class MTMomentumAgent(MTTradingAgent):
                                     order_fee=0,
                                 )
                     else:
-                        b_maker_taker = Fees.cal_maker_taker_order(self, price=bid, current_best_bid=bid, current_best_ask=ask, side=Side.ASK)
-                        fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)
                         if(MIND_FEES == True):
-                            # incl fee. must be negative
-                            if(self.avg_20_list[-1] - self.avg_50_list[-1] + fee <= 0):         
+                            fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                            diff = self.avg_20_list[-1] - self.avg_50_list[-1]
+                            if(diff + fee <= 0):         
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -165,7 +182,25 @@ class MTMomentumAgent(MTTradingAgent):
                                     limit_price=bid,
                                     order_fee=fee,
                                 )
+                                return
+                            elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                                fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=0)
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    limit_price=bid-5,
+                                    order_fee=fee,
+                                )
+                                return
                             else:
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    limit_price=bid,
+                                    order_fee=fee,
+                                )
                                 return
                         else:
                             self.place_limit_order(

@@ -13,6 +13,7 @@ from ...fees import Fees
 
 MIND_FEES = True 
 
+import math
 
 class VarMomentumAgent(VarTradingAgent):
     """
@@ -136,7 +137,8 @@ class VarMomentumAgent(VarTradingAgent):
                         if(MIND_FEES == True):
                             # incl fee. must be positive
                             fee = Fees.cal_variable_market_fee(self, self.size, price=ask)
-                            if(self.avg_20_list[-1] - self.avg_50_list[-1] - fee >= 0):
+                            diff = self.avg_20_list[-1] - self.avg_50_list[-1]
+                            if(fee == 0 or diff - fee >= 0):
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -144,8 +146,26 @@ class VarMomentumAgent(VarTradingAgent):
                                     limit_price=ask,
                                     order_fee=fee,
                                 )
-                            else:
                                 return
+                            elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                                price_adjust = (diff + fee) / (fee)
+                                price_adjust = math.ceil(price_adjust)
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    limit_price=ask+price_adjust,
+                                    order_fee=fee,
+                                )
+                                return
+                            else:
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    limit_price=ask,
+                                    order_fee=fee,
+                                )
                         else:
                             self.place_limit_order(
                                     self.symbol,
@@ -159,7 +179,8 @@ class VarMomentumAgent(VarTradingAgent):
                         if(MIND_FEES == True):
                             # incl fee. must be negative
                             fee = Fees.cal_variable_market_fee(self, self.size, price=bid)
-                            if(self.avg_20_list[-1] - self.avg_50_list[-1] + fee <= 0):         
+                            diff = self.avg_20_list[-1] - self.avg_50_list[-1]
+                            if(fee == 0 or diff + fee <= 0):
                                 self.place_limit_order(
                                     self.symbol,
                                     quantity=self.size,
@@ -167,7 +188,25 @@ class VarMomentumAgent(VarTradingAgent):
                                     limit_price=bid,
                                     order_fee=fee,
                                 )
+                            elif(self.random_state.rand() < Fees.get_ign_prob(self)):
+                                price_adjust = (diff * (-1) + fee) / (fee)
+                                price_adjust = math.ceil(price_adjust)
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    limit_price=bid-price_adjust,
+                                    order_fee=fee,
+                                )
+                                return
                             else:
+                                self.place_limit_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    limit_price=bid,
+                                    order_fee=fee,
+                                )
                                 return
                         else:
                             self.place_limit_order(
