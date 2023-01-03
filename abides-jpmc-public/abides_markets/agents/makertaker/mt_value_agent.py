@@ -281,6 +281,7 @@ class MTValueAgent(MTTradingAgent):
                     #mid = self.get_last_trade(self.symbol)
                     fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=0)
                     self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee)
+                    return
                 if (side == Side.BID):
                     b_maker_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=bid, current_best_ask=ask, side=Side.BID)
                     fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=b_maker_taker)

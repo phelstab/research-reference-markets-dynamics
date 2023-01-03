@@ -278,6 +278,7 @@ class FixValueAgent(FixTradingAgent):
                 fee = Fees.get_fixed_market_fee(self)
                 fee_size = self.size * fee
                 self.place_limit_order(self.symbol, self.size, side, p, order_fee=fee_size)
+                return
             # include fee logic
             if(MIND_FEES == True):
                 fee = Fees.get_fixed_market_fee(self)

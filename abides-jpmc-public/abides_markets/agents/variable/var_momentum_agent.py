@@ -166,6 +166,7 @@ class VarMomentumAgent(VarTradingAgent):
                                     limit_price=ask,
                                     order_fee=fee,
                                 )
+                                return
                         else:
                             self.place_limit_order(
                                     self.symbol,
@@ -188,6 +189,7 @@ class VarMomentumAgent(VarTradingAgent):
                                     limit_price=bid,
                                     order_fee=fee,
                                 )
+                                return
                             elif(self.random_state.rand() < Fees.get_ign_prob(self)):
                                 price_adjust = (diff * (-1) + fee) / (fee)
                                 price_adjust = math.ceil(price_adjust)
