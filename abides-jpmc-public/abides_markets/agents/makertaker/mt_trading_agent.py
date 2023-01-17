@@ -578,6 +578,7 @@ class MTTradingAgent(FinancialAgent):
         symbol: str,
         quantity: int,
         side: Side,
+        order_fee: Any = None,
         order_id: Optional[int] = None,
         ignore_risk: bool = True,
         tag: Any = None,
@@ -599,7 +600,7 @@ class MTTradingAgent(FinancialAgent):
         """
 
         order = MarketOrder(
-            self.id, self.current_time, symbol, quantity, side, order_id, tag
+            self.id, self.current_time, symbol, quantity, side, order_fee, order_id, tag
         )
         if quantity > 0:
             # compute new holdings

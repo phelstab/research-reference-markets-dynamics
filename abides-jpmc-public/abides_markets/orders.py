@@ -186,13 +186,15 @@ class MarketOrder(Order):
         symbol: str,
         quantity: int,
         side: Side,
+        order_fee: Optional[Any] = None,
         order_id: Optional[int] = None,
         tag: Optional[Any] = None,
     ) -> None:
         super().__init__(
             agent_id, time_placed, symbol, quantity, side, order_id=order_id, tag=tag
         )
-
+        self.order_fee: Optional[Any] = order_fee
+        
     def __str__(self) -> str:
         return "(Agent {} @ {}) : MKT Order {} {} {}".format(
             self.agent_id,
@@ -214,6 +216,7 @@ class MarketOrder(Order):
             self.symbol,
             self.quantity,
             self.side,
+            order_fee=self.order_fee,
             order_id=self.order_id,
             tag=tag,
         )

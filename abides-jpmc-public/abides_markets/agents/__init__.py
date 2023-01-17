@@ -12,14 +12,18 @@ from .value_agent import ValueAgent
 from .examples.new_momentum_agent import NewMomentumAgent
 
 
+# from .new_value_agent import NewValueAgent
+# from .new_noise_agent import NewNoiseAgent
+# from .new_fundamental_tracking_agent import NewFundamentalTrackingAgent
+
+
 from .new_exchange_agent import NewExchangeAgent
-from .new_value_agent import NewValueAgent
-from .new_noise_agent import NewNoiseAgent
 from .new_trading_agent import NewTradingAgent
-from .new_fundamental_tracking_agent import NewFundamentalTrackingAgent
-
-
-from .value_agent_rscm06_light import ValueAgentLight
+from .dual_value_agent import DualValueAgent
+from .intermarket_spread_arbitrage_machine import IntermarketSpreadArbitrageMachine
+from .dual_momentum_agent import DualMomentumAgent
+from .dual_noise_agent_0 import NoiseAgent_0
+from .dual_noise_agent_1 import NoiseAgent_1
 
 #from .new_beta_trading_agent import NewBetaTradingAgent
 

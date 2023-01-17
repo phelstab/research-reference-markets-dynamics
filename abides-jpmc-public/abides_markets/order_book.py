@@ -328,22 +328,23 @@ class OrderBook:
                 )
 
                 # realized spread 
-                rel = 2 * (matched_order.fill_price - realized_mid_price_post) / (realized_mid_price_post) * 100
+                rel = ((realized_mid_price_post - matched_order.fill_price) / (realized_mid_price_pre)) * 200
                 #rel = 100 * d_t * ((matched_order.fill_price - realized_mid_price_post) / realized_mid_price_pre)
                 # effective spread
-                eff = 2 * (matched_order.fill_price - realized_mid_price_pre) / (realized_mid_price_pre) * 100
+                eff = ((matched_order.fill_price - realized_mid_price_pre) / (realized_mid_price_pre)) * 200
                 #eff = 100 * d_t * ((matched_order.fill_price - realized_mid_price_pre) / realized_mid_price_pre)
                 # Price impact of trade
                 imp = 100 * d_t * ((realized_mid_price_post - realized_mid_price_pre) / realized_mid_price_pre)
                 # quoted half spread
-                quo = 100 * (best_ask_post - best_bid_post) / (2 * realized_mid_price_post)
+                quo = ((best_ask_pre - best_bid_pre) / (realized_mid_price_pre)) * 100
                 # log the spreads
                 exec_spreads = {"order_id": matched_order.order_id,
                 "time": self.owner.current_time,
                 "realized_spread": rel,
                 "effective_spread": eff,
                 "price_impact": imp,
-                "quoted_spread": quo}
+                "quoted_spread": quo,
+                "exchange_id": 0 if self.owner.name == "EXCHANGE_AGENT" else 1}
                 self.owner.logEvent("EXECUTION_SPREAD", exec_spreads)
                         
             filled_order = deepcopy(order)

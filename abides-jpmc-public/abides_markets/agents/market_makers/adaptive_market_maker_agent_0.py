@@ -446,7 +446,7 @@ class AdaptiveMarketMakerAgent0(TradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.BID, bid_price
+                    self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=1
                 )
             )
             bid_orders = bid_orders[1:]
@@ -460,7 +460,7 @@ class AdaptiveMarketMakerAgent0(TradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.ASK, ask_price
+                    self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=1
                 )
             )
             ask_orders = ask_orders[:-1]
@@ -474,7 +474,7 @@ class AdaptiveMarketMakerAgent0(TradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.buy_order_size, Side.BID, bid_price
+                    self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=1
                 )
             )
 
@@ -487,7 +487,7 @@ class AdaptiveMarketMakerAgent0(TradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.sell_order_size, Side.ASK, ask_price
+                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=1
                 )
             )
 

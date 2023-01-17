@@ -13,14 +13,13 @@ import datetime
 
 from abides_core import abides
 from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
-from abides_markets.configs import rmsc05MT
+from abides_markets.configs import rmsc05nofee, rmsc05MT, rmsc05VAR, rmsc05FIX
 
 import plotly
 from subprocess import call
 import json
 
-__seed = 1618033
-
+__seed = 1337
 
 
 
@@ -296,44 +295,7 @@ ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_sp
 ex_0_average_speed_of_fill = "Average speed of execution: " + str(average_speed_of_fill)
 ex_0_average_fill_rate = "Average fill rate: " + str(average_fill_rate)
 
-def exchange_0_info() -> html.Div:
-        return html.Div(
-            children=[
-                html.Span(
-                    ex_0_info,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_quoted_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_effective_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_realized_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-                # html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
-                # ,
-            ]
-        ) 
-def exchange_0_info_2() -> html.Div:
-        return html.Div(
-            children=[
-                html.Span(
-                    ex_0_average_speed_of_fill,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_fill_rate,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-            ]
-        ) 
 
-Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
 
 """
     Update the figures
@@ -363,7 +325,7 @@ fig_speed.update_layout(
 fig_fill_rate.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
-    yaxis_title="Fill Rate (in %)",
+    yaxis_title="Fill rate (in %)",
     yaxis = dict(
         tickfont=dict(
         family="Times New Roman",
@@ -424,7 +386,7 @@ fig_exchange_turnover.update_layout(
 Ex_0_orderbook.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
-    yaxis_title="Cum. Order Qty.",
+    yaxis_title="Cum. qty. securites",
     yaxis = dict(
         tickfont=dict(
         family="Times New Roman",
@@ -468,7 +430,7 @@ treemap.update_layout(
 fig_executed_order.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
-    yaxis_title="Cum. Traded Qty.",
+    yaxis_title="Cum. qty. executed securites",
     yaxis = dict(
         tickfont=dict(
         family="Times New Roman",
@@ -488,7 +450,7 @@ fig_executed_order.update_layout(
 fig_executed_order_qty.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
-    yaxis_title="Order Qty.",
+    yaxis_title="Cum. qty. executed orders",
     yaxis = dict(
         tickfont=dict(
         family="Times New Roman",
@@ -509,7 +471,7 @@ fig_executed_order_qty.update_layout(
 fig_exchange_volume.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
-    yaxis_title="Executed Order Vol. (in $)",
+    yaxis_title="Cum. executed trading vol. (in $)",
     yaxis = dict(
         tickfont=dict(
         family="Times New Roman",
@@ -535,22 +497,38 @@ fig_spreads.update_yaxes(title_font=dict(size=40, color="#0d0d0d", family="Times
 fig_speed.update_yaxes(title_font=dict(size=40, color="#0d0d0d", family="Times New Roman"))
 fig_fill_rate.update_yaxes(title_font=dict(size=40, color="#0d0d0d", family="Times New Roman"))
 
-# create txt with averages
-with open("./experiment_images/maker_taker/mt_" + str(__seed) + "_averages.txt", "w") as text_file:
-    text_file.write(ex_0_info)
-    text_file.write(ex_0_average_realized_spreads)
-    text_file.write(ex_0_average_effective_spreads)
-    text_file.write(ex_0_average_quoted_spreads)
-    text_file.write(ex_0_average_speed_of_fill)
-    text_file.write(ex_0_average_fill_rate)
+# get last transacted trading volume
+last_volume = executed_orders['cumsum_volume'].iloc[-1]
+# get last quantity of executed orders
+last_qty = executed_orders['cumsum_order_qty'].iloc[-1]
+# get last quantity of executed securites
+last_qty_securities = executed_orders['cumsum_qty'].iloc[-1]
+# get last of order fees
+last_order_fee = executed_orders['cumsum_order_fee'].iloc[-1]
 
-plotly.io.write_image(treemap, "./experiment_images/maker_taker/mt_" + str(__seed) + "_treemap.png", engine="kaleido")
-plotly.io.write_image(Ex_0_fig, "./experiment_images/maker_taker/mt_" + str(__seed) + "_timeseries.svg", engine="kaleido")
-plotly.io.write_image(Ex_0_orderbook, "./experiment_images/maker_taker/mt_" + str(__seed) + "_orderbook.svg", engine="kaleido")
-plotly.io.write_image(fig_exchange_turnover, "./experiment_images/maker_taker/mt_" + str(__seed) + "_turnover.svg", engine="kaleido")
-plotly.io.write_image(fig_executed_order_qty, "./experiment_images/maker_taker/mt_" + str(__seed) + "_order_qty.svg", engine="kaleido")
-plotly.io.write_image(fig_executed_order, "./experiment_images/maker_taker/mt_" + str(__seed) + "_order_volume.svg", engine="kaleido")
-plotly.io.write_image(fig_spreads, "./experiment_images/maker_taker/mt_" + str(__seed) + "_spreads.svg", engine="kaleido")
-plotly.io.write_image(fig_speed, "./experiment_images/maker_taker/mt_" + str(__seed) + "_speed.svg", engine="kaleido")
-plotly.io.write_image(fig_fill_rate, "./experiment_images/maker_taker/mt_" + str(__seed) + "_fill_rate.svg", engine="kaleido")
-plotly.io.write_image(fig_exchange_volume, "./experiment_images/maker_taker/mt_" + str(__seed) + "_order_volume.svg", engine="kaleido")
+
+# create txt with averages
+with open("./experiment_images/mt/mt_02_" + str(__seed) + "_averages.txt", "w") as text_file:
+    text_file.write("Market close transacted trading volume" + str(last_volume)+ "\n")
+    text_file.write("Market close Quantity of executed orders" + str(last_qty)+ "\n")
+    text_file.write("Market close quantity of executed securites" + str(last_qty_securities)+ "\n")
+    text_file.write("Market close market fees turnover" + str(last_order_fee)+ "\n")
+    text_file.write(ex_0_average_speed_of_fill+ "\n")
+    text_file.write(ex_0_average_fill_rate+ "\n")
+    text_file.write(ex_0_average_quoted_spreads+ "\n")
+    text_file.write(ex_0_average_effective_spreads+ "\n")
+    text_file.write(ex_0_average_realized_spreads + "\n")
+
+
+
+
+plotly.io.write_image(treemap, "./experiment_images/mt/mt_02_" + str(__seed) + "_treemap.png", engine="kaleido")
+plotly.io.write_image(Ex_0_fig, "./experiment_images/mt/mt_02_" + str(__seed) + "_timeseries.svg", engine="kaleido")
+plotly.io.write_image(Ex_0_orderbook, "./experiment_images/mt/mt_02_" + str(__seed) + "_orderbook.svg", engine="kaleido")
+plotly.io.write_image(fig_exchange_volume, "./experiment_images/mt/mt_02_" + str(__seed) + "_transacted_trading_volume.svg", engine="kaleido")
+plotly.io.write_image(fig_executed_order, "./experiment_images/mt/mt_02_" + str(__seed) + "_quantity_executed_securities.svg", engine="kaleido")
+plotly.io.write_image(fig_executed_order_qty, "./experiment_images/mt/mt_02_" + str(__seed) + "_quantity_executed_orders.svg", engine="kaleido")
+plotly.io.write_image(fig_exchange_turnover, "./experiment_images/mt/mt_02_" + str(__seed) + "_turnover.svg", engine="kaleido")
+plotly.io.write_image(fig_spreads, "./experiment_images/mt/mt_02_" + str(__seed) + "_spreads.svg", engine="kaleido")
+plotly.io.write_image(fig_speed, "./experiment_images/mt/mt_02_" + str(__seed) + "_speed.svg", engine="kaleido")
+plotly.io.write_image(fig_fill_rate, "./experiment_images/mt/mt_02_" + str(__seed) + "_fill_rate.svg", engine="kaleido")

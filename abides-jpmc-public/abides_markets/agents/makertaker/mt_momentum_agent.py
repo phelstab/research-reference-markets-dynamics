@@ -134,13 +134,12 @@ class MTMomentumAgent(MTTradingAgent):
                             fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
                             diff = self.avg_20_list[-1] - self.avg_50_list[-1]
                             if(diff - fee >= 0):
-                                self.place_limit_order(
+                                self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.BID,
-                                    limit_price=ask,
                                     order_fee=fee,
-                                )
+                                    )
                                 return
                             elif(self.random_state.rand() < Fees.get_ign_prob(self)):
                                 fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=0)
@@ -153,13 +152,12 @@ class MTMomentumAgent(MTTradingAgent):
                                 )
                                 return
                             else:
-                                self.place_limit_order(
+                                self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.BID,
-                                    limit_price=ask,
                                     order_fee=fee,
-                                )
+                                    )
                                 return
 
                         else:
@@ -175,13 +173,12 @@ class MTMomentumAgent(MTTradingAgent):
                             fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
                             diff = self.avg_20_list[-1] - self.avg_50_list[-1]
                             if(diff + fee <= 0):         
-                                self.place_limit_order(
+                                self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.ASK,
-                                    limit_price=bid,
                                     order_fee=fee,
-                                )
+                                    )
                                 return
                             elif(self.random_state.rand() < Fees.get_ign_prob(self)):
                                 fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=0)
@@ -194,13 +191,12 @@ class MTMomentumAgent(MTTradingAgent):
                                 )
                                 return
                             else:
-                                self.place_limit_order(
+                                self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.ASK,
-                                    limit_price=bid,
                                     order_fee=fee,
-                                )
+                                    )
                                 return
                         else:
                             self.place_limit_order(

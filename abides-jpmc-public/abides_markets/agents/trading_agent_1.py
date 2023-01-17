@@ -185,8 +185,17 @@ class TradingAgent(FinancialAgent):
 
         # Mark to market.
         cash = self.mark_to_market(self.holdings)
+        end_info = {}
+        end_info["ScalarEventValue"] = cash
 
-        self.logEvent("ENDING_CASH", cash, True)
+        # Log the amount of submitted orders
+        end_info["SubmittedOrders"] = len(self.executed_orders)
+
+        # Log the amount of paid fees
+        end_info["PaidFees"] = sum([order.order_fee for order in self.executed_orders])
+
+        self.logEvent("ENDING_CASH", end_info, True)
+        #self.logEvent("ENDING_CASH", cash, True)
         logger.debug(
             "Final holdings for {}: {}. Marked to market: {}".format(
                 self.name, self.fmt_holdings(self.holdings), cash
@@ -440,6 +449,7 @@ class TradingAgent(FinancialAgent):
         insert_by_id: bool = False,
         is_post_only: bool = False,
         ignore_risk: bool = True,
+        order_fee: Any = None,
         tag: Any = None,
     ) -> LimitOrder:
         """
@@ -472,6 +482,7 @@ class TradingAgent(FinancialAgent):
             insert_by_id=insert_by_id,
             is_post_only=is_post_only,
             order_id=order_id,
+            order_fee=order_fee,
             tag=tag,
         )
 
@@ -517,6 +528,7 @@ class TradingAgent(FinancialAgent):
         insert_by_id: bool = False,
         is_post_only: bool = False,
         ignore_risk: bool = True,
+        order_fee: Any = None,
         tag: Any = None,
     ) -> None:
         """
@@ -548,15 +560,20 @@ class TradingAgent(FinancialAgent):
             insert_by_id,
             is_post_only,
             ignore_risk,
+            order_fee,
             tag,
         )
 
         if order is not None:
             self.orders[order.order_id] = deepcopy(order)
             self.send_message(self.exchange_id, LimitOrderMsg(order))
-
+            __order = order.to_dict()
+            __order["exchange_id"] = 1
+            order.tag = 1
+            # Add order to the executed_orders list log
+            self.executed_orders.append(order)
             if self.log_orders:
-                self.logEvent("ORDER_SUBMITTED", order.to_dict(), deepcopy_event=False)
+                self.logEvent("ORDER_SUBMITTED", __order, deepcopy_event=False)
 
     def place_market_order(
         self,
@@ -644,7 +661,8 @@ class TradingAgent(FinancialAgent):
             # object per order, that never alters its original state, and eliminate all
             # these copies.
             self.orders[order.order_id] = deepcopy(order)
-
+            # Add order to the executed_orders list log
+            self.executed_orders.append(order)
             if self.log_orders:
                 self.logEvent("ORDER_SUBMITTED", order.to_dict(), deepcopy_event=False)
 
@@ -759,11 +777,11 @@ class TradingAgent(FinancialAgent):
             """
             Logging order execution and calulating market fee for stock exchange
             """
-            market_fee = {
-                "fee": self.calculate_market_fee(order.quantity, order.fill_price)
-            }
-            self.logEvent("MARKET_FEE", market_fee, deepcopy_event=False)
-            self.logEvent("ORDER_EXECUTED", order.to_dict(), deepcopy_event=False)
+            __order = order.to_dict()
+            # get the current time
+            __order["time_executed"] = self.current_time
+            __order["exchange_id"] = order.tag
+            self.logEvent("ORDER_EXECUTED", __order, deepcopy_event=False)
 
         # At the very least, we must update CASH and holdings at execution time.
         qty = order.quantity if order.side.is_bid() else -1 * order.quantity

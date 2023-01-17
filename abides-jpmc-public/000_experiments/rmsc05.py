@@ -139,7 +139,6 @@ def get_treemap_fig() -> go.Figure:
     df_end = get_treemap_df_end(logs_df)
     df_sorted = df_end.sort_values(by=['agent_id', 'agent_type'], ascending=[True,True])
     fig = px.treemap(df_sorted,
-            title='Profits and Losses of Agents',
             values='ScalarEventValue',
             path=[px.Constant('Agent Types'), 'agent_type', 'agent_id'],
             )
@@ -232,7 +231,7 @@ order_executed_only_full_executed = order_executed_only_full_executed.groupby(['
 # time placed - time_executed and add new column to order_executed_only_full_executed
 order_executed_only_full_executed['speed_of_fill'] = (order_executed_only_full_executed['time_executed'] - order_executed_only_full_executed['time_placed'])
 # convert to milliseconds
-order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e9)
+order_executed_only_full_executed['speed_of_fill'] = order_executed_only_full_executed['speed_of_fill'].astype(np.int64) / int(1e9) # convert to milliseconds
 # Likelihood of a fill == fill rate Fill rate = (partial_execution / placed_quantity) * 100
 order_executed_only_full_executed['fill_rate'] = (order_executed_only_full_executed['quantity'].div(order_executed_only_full_executed['placed_quantity'])).mul(100)
 # average of speed_of_fill 
@@ -281,56 +280,51 @@ colors = {
 }
 
 ex_0_info = ex_0_name + " Orderbook Imbalance: " + str(ex_0_ob_imbalance)
-ex_0_average_realized_spreads = "Average realized spreads: " + str(average_realized_spreads)
-ex_0_average_effective_spreads = "Average effective spreads: " + str(average_effective_spreads)
-ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_spreads)
-ex_0_average_speed_of_fill = "Average speed of execution: " + str(average_speed_of_fill)
-ex_0_average_fill_rate = "Average fill rate: " + str(average_fill_rate)
+ex_0_average_realized_spreads = "Average realized spreads: " + str(average_realized_spreads) + " %"
+ex_0_average_effective_spreads = "Average effective spreads: " + str(average_effective_spreads) + " %"
+ex_0_average_quoted_spreads = "Average quoted spreads: " + str(average_quoted_spreads) + " %"
+ex_0_average_speed_of_fill = "Average speed of execution: " + str(round(average_speed_of_fill, 2)) + " ms"
+ex_0_average_fill_rate = "Average fill rate: " + str(round(average_fill_rate, 2)) + " %"
 
 def exchange_0_info() -> html.Div:
-        return html.Div(
-            children=[
-                html.Span(
-                    ex_0_info,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_quoted_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_effective_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_realized_spreads,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-                # html.Img(src="assets/imbalance.png", style={'float': 'right', 'position': 'relative', 'padding-top': 0, 'padding-right': 0})
-                # ,
-            ]
-        ) 
-def exchange_0_info_2() -> html.Div:
-        return html.Div(
-            children=[
-                html.Span(
-                    ex_0_average_speed_of_fill,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-                html.Span(
-                    ex_0_average_fill_rate,
-                    style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},
-                ),
-            ]
-        ) 
-
+    return html.Div(
+        children=[
+            dbc.Row(
+                [
+                    html.Span(ex_0_info,style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},),
+                ]),
+            dbc.Row(
+                [
+                    html.Span(ex_0_average_quoted_spreads,style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},),
+                ]
+            ),
+            dbc.Row(
+                [
+                    html.Span(ex_0_average_effective_spreads,style= {'color': 'grey', 'margin-left': '25px', 'font-size': '15px'},),
+                ]
+            ),
+            dbc.Row(
+                [
+                    html.Span(ex_0_average_realized_spreads,style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'},),
+                ]
+            ),
+            dbc.Row(
+                [
+                    html.Span(ex_0_average_fill_rate, style={'color': 'grey', 'margin-left': '25px','font-size': '15px'}),
+                ]
+            ),
+            dbc.Row(
+                [
+                    html.Span(ex_0_average_speed_of_fill, style= {'color': 'grey', 'margin-left': '25px','font-size': '15px'}),
+                ]
+            ),
+        ]
+    )
 Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Post Data Analysis", style= {'textAlign': 'left', 'color': 'white' , 'padding': '25px', 'margin-top': '25px', 'margin-left': '25px', 'background': '#6432fa', 'font-weight': 'bold', 'font-size': '30px'})
-
 """
     Update the figures
 """
 treemap = get_treemap_fig()
-
 fig_speed.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -350,7 +344,6 @@ fig_speed.update_layout(
         ),
     ),
 )
-
 fig_fill_rate.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -370,7 +363,6 @@ fig_fill_rate.update_layout(
         ),
     ),
 )
-
 fig_spreads.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -390,8 +382,6 @@ fig_spreads.update_layout(
         ),
     ),
 )
-
-
 fig_exchange_turnover.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -411,7 +401,6 @@ fig_exchange_turnover.update_layout(
         ),
     ),
 )
-
 Ex_0_orderbook.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -431,7 +420,6 @@ Ex_0_orderbook.update_layout(
         ),
     ),
 )
-
 Ex_0_fig.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -451,11 +439,9 @@ Ex_0_fig.update_layout(
         ),
     ),
 )
-
 treemap.update_layout(
     title="",
 )
-
 fig_executed_order.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -475,7 +461,6 @@ fig_executed_order.update_layout(
         ),
     ),
 )
-
 fig_executed_order_qty.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -495,8 +480,6 @@ fig_executed_order_qty.update_layout(
         ),
     ),
 )
-
-
 fig_exchange_volume.update_layout(
     title="",
     xaxis_title="Time Steps (ns)",
@@ -516,7 +499,6 @@ fig_exchange_volume.update_layout(
         ),
     ),
 )
-
 # Design the app layout
 app.layout = html.Div(
     [
@@ -524,17 +506,14 @@ app.layout = html.Div(
             Header_component,
         ]),
         dbc.Row([
-            exchange_0_info(),
-        ]),
-        dbc.Row([
-            exchange_0_info_2(),
+            dbc.Col(
+                exchange_0_info(),
+            ),
         ]),
         dbc.Row([
             dbc.Col(
                 dcc.Graph(id='the_graph1', figure=get_treemap_fig(), config= {'displaylogo': False}),
             ),
-        ]),
-        dbc.Row([
             dbc.Col(
                 dcc.Graph(id='the_graph2', figure=Ex_0_fig, config= {'displaylogo': False}),
             ),
@@ -543,8 +522,6 @@ app.layout = html.Div(
             dbc.Col(
                 dcc.Graph(id='the_graph3', figure=Ex_0_orderbook, config= {'displaylogo': False}),
             ),
-        ]),
-        dbc.Row([
             dbc.Col(
                 dcc.Graph(id='the_graph4', figure=fig_exchange_turnover, config= {'displaylogo': False}),
             ),
@@ -564,8 +541,6 @@ app.layout = html.Div(
             dbc.Col(
                 dcc.Graph(id='the_graph8', figure=fig_spreads, config= {'displaylogo': False}),
             ),
-        ]),
-        dbc.Row([
             dbc.Col(
                 dcc.Graph(id='the_graph9', figure=fig_speed, config= {'displaylogo': False}),
             ),

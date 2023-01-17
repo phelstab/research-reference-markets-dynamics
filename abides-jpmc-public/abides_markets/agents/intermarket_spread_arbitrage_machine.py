@@ -3,8 +3,9 @@
 # https://www.investopedia.com/terms/i/intermarketspread.asp
 # https://www.mdpi.com/1911-8074/3/1/63
 # https://books.google.de/books?hl=en&lr=&id=PIpxrK3LLUMC&oi=fnd&pg=PA17&dq=Intermarket+Spread+trading+strategy&ots=7REtaF4kZP&sig=B0PUQLtPjQ6SWhp6JXti3RQDX7s&redir_esc=y#v=onepage&q=Intermarket%20Spread%20trading%20strategy&f=false
-
-from typing import List, Optional
+import logging
+from math import floor, ceil
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -13,20 +14,13 @@ from abides_core.utils import str_to_ns
 
 from ..messages.query import QuerySpreadResponseMsg
 
-from ..messages.marketdata import (
-    MarketDataMsg,
-    L2SubReqMsg,
-    BookImbalanceSubReqMsg,
-
-)
-
 from ..orders import Side
-from .trading_agent import TradingAgent
+from .new_trading_agent import NewTradingAgent
 
 import logging
 logger = logging.getLogger(__name__)
 
-class IntermarketSpreadArbitrageMachine(TradingAgent):
+class IntermarketSpreadArbitrageMachine(NewTradingAgent):
     """
     Simple Intermarket Spread Arbitrage Agent that compares the best bid ask prices from 2 exchanges and places 2 orders (Buy and Sell or Sell and Buy)
     on both exchanges if the spread is large enough.
@@ -45,11 +39,12 @@ class IntermarketSpreadArbitrageMachine(TradingAgent):
         random_state: Optional[np.random.RandomState] = None,
         min_size=20,
         max_size=50,
-        wake_up_freq: NanosecondTime = str_to_ns("60s"),
+        wake_up_freq: NanosecondTime = 1_000_000_000,  # 1 second
         poisson_arrival=True,
         order_size_model=None,
         subscribe=False,
         log_orders=False,
+        lambda_a: float = 0.005,
     ) -> None:
 
         super().__init__(id, name, type, random_state, starting_cash, log_orders)
@@ -69,98 +64,126 @@ class IntermarketSpreadArbitrageMachine(TradingAgent):
 
         self.subscribe = subscribe  # Flag to determine whether to subscribe to data or use polling mechanism
         self.subscription_requested = False
+       
 
         self.log_orders = log_orders
         self.state = "AWAITING_WAKEUP"
-    
-        global best_bid_ex0
-        best_bid_ex0 = None
-        global best_ask_ex0
-        best_ask_ex0 = None 
-        global best_bid_ex1
-        best_bid_ex1 = None 
-        global best_ask_ex1
-        best_ask_ex1 = None 
+
+        self.lambda_a: float = lambda_a
+        # The agent uses this to track whether it has begun its strategy or is still
+        # handling pre-market tasks.
+        self.trading: bool = False
+
+
+        # global best_bid_ex0
+        # best_bid_ex0 = None
+        # global best_ask_ex0
+        # best_ask_ex0 = None 
+        # global best_bid_ex1
+        # best_bid_ex1 = None 
+        # global best_ask_ex1
+        # best_ask_ex1 = None 
+
+    # def initialise_state(self) -> Dict[str, bool]:
+    #     """Returns variables that keep track of whether spread and transacted volume have been observed."""
+
+    #     if self.subscribe:
+    #         return {"AWAITING_MARKET_DATA": True, "AWAITING_TRANSACTED_VOLUME": True}
+    #     else:
+    #         return {"AWAITING_SPREAD": True, "AWAITING_TRANSACTED_VOLUME": True}
 
     def kernel_starting(self, start_time: NanosecondTime) -> None:
         super().kernel_starting(start_time)
 
 
+
     def wakeup(self, current_time: NanosecondTime) -> None:
         """Agent wakeup is determined by self.wake_up_freq"""
-        super().wakeup(current_time)
-
         can_trade = super().wakeup(current_time)
 
-        if not self.has_subscribed:
-            super().request_data_subscription(
-                BookImbalanceSubReqMsg(
-                    symbol=self.symbol,
-                    min_imbalance=self.min_imbalance,
-                )
-            )
-            self.last_time_book_order = current_time
-            self.has_subscribed = True
+        if not self.mkt_open or not self.mkt_close:
+            # TradingAgent handles discovery of exchange times.
+            return
+        else:
+            if not self.trading:
+                self.trading = True
+                # Time to start trading!
+                logger.debug("{} is ready to start trading now.", self.name)
 
-        if self.subscribe and not self.subscription_requested:
-            super().request_data_subscription(
-                L2SubReqMsg(
-                    symbol=self.symbol,
-                    freq=self.subscribe_freq,
-                    depth=self.subscribe_num_levels,
-                )
-            )
-            self.subscription_requested = True
-            self.get_transacted_volume(self.symbol, lookback_period=self.subscribe_freq)
-            self.state = self.initialise_state()
+        if self.mkt_closed and (self.symbol in self.daily_close_price):
+            # Market is closed and we already got the daily close price.
+            return
+        
+        delta_time = self.random_state.exponential(scale=1.0 / self.lambda_a)
+        self.set_wakeup(current_time + int(round(delta_time)))
+        
 
-
-        elif can_trade and not self.subscribe:
-            self.cancel_all_orders(exchange_id=0)
-            self.cancel_all_orders(exchange_id=1)
-            
-            self.get_current_spread(self.symbol, 0)
+        if self.mkt_closed and (not self.symbol in self.daily_close_price):
             self.get_current_spread(self.symbol, 1)
+            self.get_current_spread(self.symbol, 0)
+            self.state = "AWAITING_SPREAD"
+            return
 
-            self.get_transacted_volume(self.symbol, lookback_period=self.wake_up_freq)
-            self.initialise_state()
+        self.cancel_all_orders(exchange_id=0)
+        self.cancel_all_orders(exchange_id=1)
+
+        if type(self) == IntermarketSpreadArbitrageMachine:
+            self.get_current_spread(self.symbol, 1)
+            self.get_current_spread(self.symbol, 0)
+            self.state = "AWAITING_SPREAD"
+        else:
+            self.state = "ACTIVE"
+        # if self.subscribe and not self.subscription_requested:
+        #     super().request_data_subscription(
+        #         L2SubReqMsg(
+        #             symbol=self.symbol,
+        #             freq=int(10e9), # 10 seconds
+        #             depth=1,
+        #         )
+        #     )
+        #     self.subscription_requested = True
+        #     self.state = "AWAITING_MARKET_DATA"
+        # elif can_trade:
+        #     self.get_current_spread(self.symbol, exchange_id=0)
+        #     self.get_current_spread(self.symbol, exchange_id=1)
+        #     self.state = "AWAITING_SPREAD"
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message ) -> None:
 
         super().receive_message(current_time, sender_id, message)
 
-        if (
-            not self.subscribe
-            and self.state == "AWAITING_SPREAD"
-            and isinstance(message, QuerySpreadResponseMsg)
-        ):
-            if self.mkt_closed:
-                return
-            # Get the information from sender id 1 and 0
-            if sender_id == 0:
-                if message.bids:
-                    global best_bid_ex0 
-                    best_bid_ex0 = message.bids[0][0]
-                if message.asks:
-                    global best_ask_ex0
-                    best_ask_ex0 = message.asks[0][0]
-            elif sender_id == 1:
-                if message.bids:
-                    global best_bid_ex1
-                    best_bid_ex1 = message.bids[0][0]
-                if message.asks:
-                    global best_ask_ex1
-                    best_ask_ex1 = message.asks[0][0]
-            
-            self.state = "AWAITING_WAKEUP"
+        if self.state == "AWAITING_SPREAD":
 
-        elif (
-            self.subscribe
-            and self.state == "AWAITING_MARKET_DATA"
-            and isinstance(message, MarketDataMsg)
-        ):
+            if (isinstance(message, QuerySpreadResponseMsg)):
+                # Get the information from sender id 1 and 0
+                if self.mkt_closed:
+                    return
+                if sender_id == 0:
+                    print("received spread from exchange 0")
+                    # if message.bids and message.asks:
+                    #     global best_bid_ex0 
+                    #     best_bid_ex0 = message.bids[0][0]
+                    #     global best_ask_ex0
+                    #     best_ask_ex0 = message.asks[0][0]
+                elif sender_id == 1:
+                    print("received spread from exchange 1")
+                    # if message.bids and message.asks:
+                    #     global best_bid_ex1
+                    #     best_bid_ex1 = message.bids[0][0]
+                    #     global best_ask_ex1
+                    #     best_ask_ex1 = message.asks[0][0]
+                
+                self.state = "AWAITING_WAKEUP"
+            # check if arbitrage opportunity exists
 
+            # place order
+            #self.place_orders(current_time, best_bid_ex0, best_ask_ex0, best_bid_ex1, best_ask_ex1)
+           
+
+        # elif (isinstance(message, MarketDataMsg)):
+        #     print("I am waiting for market data")
+        #     self.state = "AWAITING_MARKET_DATA"
 
             #bids, asks = self.known_bids[self.symbol], self.known_asks[self.symbol]
 
@@ -177,56 +200,55 @@ class IntermarketSpreadArbitrageMachine(TradingAgent):
 
             # if ex0 ask < ex 1 ask
             # check if enough liquidity is there to execute the trade
-            if best_ask_ex0 is not None and best_ask_ex1 is not None:
-                if best_ask_ex0 < best_ask_ex1:
-                    # ask price is lower on ex0 than ask price on ex1
-                    # place buy order on ex0 and sell order on ex1
-                    self.place_orders(side=True)
-                elif best_ask_ex0 > best_ask_ex1:
-                    self.place_orders(side=False)
-                else:
-                    pass            
+            # if best_ask_ex0 is not None and best_ask_ex1 is not None:
+            #     if best_ask_ex0 < best_ask_ex1:
+            #         # ask price is lower on ex0 than ask price on ex1
+            #         # place buy order on ex0 and sell order on ex1
+            #         self.place_orders(side=True)
+            #     elif best_ask_ex0 > best_ask_ex1:
+            #         self.place_orders(side=False)
+            #     else:
+            #         pass            
 
-            # if ex0 bid < ex1 bid
-            # check if enough liquidity is there to execute the trade
-            elif best_bid_ex0 is not None and best_bid_ex1 is not None:
-                if best_bid_ex0 < best_bid_ex1:
-                    # bid price is lower on ex0 than bid price on ex1
-                    # place sell order on ex0 and buy order on ex1
-                    self.place_orders(side=False)
-                elif best_bid_ex0 > best_bid_ex1:
-                    self.place_orders(side=True)
-                else:
-                    pass
+            # # if ex0 bid < ex1 bid
+            # # check if enough liquidity is there to execute the trade
+            # elif best_bid_ex0 is not None and best_bid_ex1 is not None:
+            #     if best_bid_ex0 < best_bid_ex1:
+            #         # bid price is lower on ex0 than bid price on ex1
+            #         # place sell order on ex0 and buy order on ex1
+            #         self.place_orders(side=False)
+            #     elif best_bid_ex0 > best_bid_ex1:
+            #         self.place_orders(side=True)
+            #     else:
+            #         pass
 
 
             # if ex0 ask > ex 1 ask
             # check if enough liquidity is there to execute the trade
-            elif best_ask_ex0 is not None and best_ask_ex1 is None:
-                
+            # elif best_ask_ex0 is not None and best_ask_ex1 is None:
+            #     print("")
+            
+            
+            # # if ex0 bid > ex1 bid
+            # # check if enough liquidity is there to execute the trade
 
 
-            # if ex0 bid > ex1 bid
-            # check if enough liquidity is there to execute the trade
+            # # if best_bid_ex0 is not None and best_bid_ex1 is not None:
+            # #     if best_bid_ex1 < best_ask_ex0:
+            # #         # bid price is higher on ex1 than ask price on ex0
+            # #         # place buy order on ex1 and sell order on ex0 
+            # #         self.place_orders(side=True)
+            # #     elif best_bid_ex0 > best_bid_ex1:
+            # #         self.place_orders(best_bid_ex1, best_bid_ex0)
+            # #     else:
+            # #         pass
+            # # elif best_bid_ex0 is not None and best_bid_ex1 is None:
+            # #     self.place_orders(best_bid_ex0, best_bid_ex0)
+            # # elif best_bid_ex0 is None and best_bid_ex1 is not None:
+            # #     self.place_orders(best_bid_ex1, best_bid_ex1)
 
 
-            # if best_bid_ex0 is not None and best_bid_ex1 is not None:
-            #     if best_bid_ex1 < best_ask_ex0:
-            #         # bid price is higher on ex1 than ask price on ex0
-            #         # place buy order on ex1 and sell order on ex0 
-            #         self.place_orders(side=True)
-            #     elif best_bid_ex0 > best_bid_ex1:
-            #         self.place_orders(best_bid_ex1, best_bid_ex0)
-            #     else:
-            #         pass
-            # elif best_bid_ex0 is not None and best_bid_ex1 is None:
-            #     self.place_orders(best_bid_ex0, best_bid_ex0)
-            # elif best_bid_ex0 is None and best_bid_ex1 is not None:
-            #     self.place_orders(best_bid_ex1, best_bid_ex1)
-
-
-            self.state = "AWAITING_MARKET_DATA"
-
+            # #self.state = "AWAITING_MARKET_DATA"
 
     """
         Side = True means SELL
@@ -243,8 +265,5 @@ class IntermarketSpreadArbitrageMachine(TradingAgent):
         same wakeup frequency as a Market Maker
     """
     def get_wake_frequency(self) -> NanosecondTime:
-        if not self.poisson_arrival:
-            return self.wake_up_freq
-        else:
-            delta_time = self.random_state.exponential(scale=self.arrival_rate)
-            return int(round(delta_time))
+        delta_time = self.random_state.exponential(scale=1.0 / self.lambda_a)
+        return int(round(delta_time))

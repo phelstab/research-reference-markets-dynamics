@@ -15,7 +15,7 @@ VAR_LIMIT_FEE = 1190 # 11.90$
 # source: https://www.cmegroup.com/company/clearing-fees.html
 FIX_LIMIT_FEE = 9 # CME equitiy futures 0.80$ per contract on the electronic trading platform GLOBEX 
 
-PERCENT = 0.5
+PERCENT = 0.2
 
 class Fees():
     """
