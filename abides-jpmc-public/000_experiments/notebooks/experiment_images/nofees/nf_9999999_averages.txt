@@ -1,9 +1,0 @@
-Market close transacted trading volume2859444863.3000164
-Market close Quantity of executed orders51854
-Market close quantity of executed securites2854918.0
-Market close market fees turnover0.0
-Average speed of execution: 17.531848091728186
-Average fill rate: 65.52804034662996
-Average quoted spreads: 0.001183894666114663
-Average effective spreads: 4.3985614474309685e-05
-Average realized spreads: -3.315677029384491e-05
