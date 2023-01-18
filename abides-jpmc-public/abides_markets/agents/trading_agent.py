@@ -626,6 +626,7 @@ class TradingAgent(FinancialAgent):
                     return
             self.orders[order.order_id] = deepcopy(order)
             self.send_message(self.exchange_id, MarketOrderMsg(order))
+            self.executed_orders.append(order)
             if self.log_orders:
                 self.logEvent("ORDER_SUBMITTED", order.to_dict(), deepcopy_event=False)
 

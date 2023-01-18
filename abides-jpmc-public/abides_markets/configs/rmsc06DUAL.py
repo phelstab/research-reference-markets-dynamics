@@ -20,7 +20,7 @@ from abides_markets.agents import (
     AdaptiveMarketMakerAgent1,
     NoiseAgent_0,
     NoiseAgent_1,
-    #IntermarketSpreadArbitrageMachine,
+    IntermarketSpreadArbitrageMachine,
 )
 from abides_markets.models import OrderSizeModel
 from abides_markets.oracles import SparseMeanRevertingOracle
@@ -46,9 +46,9 @@ def build_config(
     stream_history_length=500,
     exchange_log_orders=None,
     # 2) Noise Agent
-    num_noise_agents=500,
+    num_noise_agents=1000,
     # 3) Value Agents
-    num_value_agents=204,
+    num_value_agents=150,
     r_bar=100_000,  # true mean fundamental value
     kappa=1.67e-15,  # Value Agents appraisal of mean-reversion
     lambda_a=5.7e-12,  # ValueAgent arrival rate
@@ -351,29 +351,29 @@ def build_config(
     agent_types.extend("MomentumAgent")
 
 
-    # agents.extend(
-    #     [
-    #         IntermarketSpreadArbitrageMachine(
-    #             id=j,
-    #             name="INTER_MARKET_MACHINE{}".format(j),
-    #             type="InterMarketSpreadArbitrageAgent",
-    #             symbol=ticker,
-    #             starting_cash=starting_cash,
-    #             #min_size=1,
-    #             #max_size=10,
-    #             #wake_up_freq=str_to_ns("37s"),
-    #             poisson_arrival=True,
-    #             log_orders=log_orders,
-    #             order_size_model=ORDER_SIZE_MODEL,
-    #             random_state=np.random.RandomState(
-    #                 seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
-    #             ),
-    #         )
-    #         for j in range(agent_count, agent_count + 1)
-    #     ]
-    # )
-    # agent_count += 1
-    # agent_types.extend("InterMarketSpreadArbitrageAgent")
+    agents.extend(
+        [
+            IntermarketSpreadArbitrageMachine(
+                id=j,
+                name="INTER_MARKET_MACHINE{}".format(j),
+                type="InterMarketSpreadArbitrageAgent",
+                symbol=ticker,
+                starting_cash=starting_cash,
+                #min_size=1,
+                #max_size=10,
+                #wake_up_freq=str_to_ns("37s"),
+                poisson_arrival=True,
+                log_orders=log_orders,
+                order_size_model=ORDER_SIZE_MODEL,
+                random_state=np.random.RandomState(
+                    seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
+                ),
+            )
+            for j in range(agent_count, agent_count + 1)
+        ]
+    )
+    agent_count += 1
+    agent_types.extend("InterMarketSpreadArbitrageAgent")
 
 
     # extract kernel seed here to reproduce the state of random generator in old version

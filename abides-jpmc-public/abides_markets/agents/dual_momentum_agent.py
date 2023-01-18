@@ -120,6 +120,7 @@ class DualMomentumAgent(NewTradingAgent):
                         random_state=self.random_state
                     )
 
+                rndm = self.random_state.randint(0, 1 + 1)
                 if self.size > 0:
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
                         self.place_limit_order(
@@ -128,7 +129,7 @@ class DualMomentumAgent(NewTradingAgent):
                             side=Side.BID,
                             limit_price=ask,
                             order_fee=2,
-                            exchange_id=0
+                            exchange_id=rndm
                         )
                     else:
                         self.place_limit_order(
@@ -137,7 +138,7 @@ class DualMomentumAgent(NewTradingAgent):
                             side=Side.ASK,
                             limit_price=bid,
                             order_fee=2,
-                            exchange_id=0
+                            exchange_id=rndm
                         )
 
     def get_wake_frequency(self) -> NanosecondTime:

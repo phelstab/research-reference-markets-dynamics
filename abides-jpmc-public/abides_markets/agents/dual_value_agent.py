@@ -306,13 +306,15 @@ class DualValueAgent(NewTradingAgent):
                                                         ba0=best_ask_ex0,
                                                         bb1=best_bid_ex1,
                                                         ba1=best_ask_ex1)
+            # give random number between 0 and 1 to decide if limit or market order
+            rndm = self.random_state.randint(0, 1 + 1)
 
             self.place_limit_order(symbol=self.symbol,
                                     quantity=self.size,
                                     side=side,
                                     limit_price=p,
                                     order_fee=2,
-                                    exchange_id=exchange_id
+                                    exchange_id=rndm
                                     )
 
     def receive_message(

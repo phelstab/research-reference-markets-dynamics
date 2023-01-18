@@ -197,7 +197,6 @@ class NewTradingAgent(FinancialAgent):
         end_info["PaidFees"] = sum([order.order_fee for order in self.executed_orders])
 
         self.logEvent("ENDING_CASH", end_info, True)
-        #self.logEvent("ENDING_CASH", cash, True)
         logger.debug(
             "Final holdings for {}: {}. Marked to market: {}".format(
                 self.name, self.fmt_holdings(self.holdings), cash
@@ -250,7 +249,7 @@ class NewTradingAgent(FinancialAgent):
         return (self.mkt_open and self.mkt_close) and not self.mkt_closed
 
     def request_data_subscription(
-        self, subscription_message: MarketDataSubReqMsg
+        self, subscription_message: MarketDataSubReqMsg, exchange_id: int
     ) -> None:
         """
         Used by any Trading Agent subclass to create a subscription to market data from
@@ -262,7 +261,7 @@ class NewTradingAgent(FinancialAgent):
 
         subscription_message.cancel = False
 
-        self.send_message(recipient_id=self.exchange_id, message=subscription_message)
+        self.send_message(recipient_id=exchange_id, message=subscription_message)
 
 
     def cancel_data_subscription(
@@ -586,6 +585,7 @@ class NewTradingAgent(FinancialAgent):
             __order = order.to_dict()
             __order["exchange_id"] = exchange_id
             order.tag = exchange_id
+            self.executed_orders.append(order)
             if self.log_orders:
                 self.logEvent("ORDER_SUBMITTED", __order, deepcopy_event=False)
 
@@ -652,7 +652,7 @@ class NewTradingAgent(FinancialAgent):
             )
 
     def place_multiple_orders(
-        self, orders: List[Union[LimitOrder, MarketOrder]]
+        self, orders: List[Union[LimitOrder, MarketOrder]], exchange_id: int
     ) -> None:
         """
         Used by any Trading Agent subclass to place multiple orders at the same time.
@@ -678,12 +678,12 @@ class NewTradingAgent(FinancialAgent):
             # object per order, that never alters its original state, and eliminate all
             # these copies.
             self.orders[order.order_id] = deepcopy(order)
-
+            self.executed_orders.append(order)
             if self.log_orders:
                 self.logEvent("ORDER_SUBMITTED", order.to_dict(), deepcopy_event=False)
 
         if len(messages) > 0:
-            self.send_message_batch(self.exchange_id, messages)
+            self.send_message_batch(exchange_id, messages)
 
     def cancel_order(
         self, 

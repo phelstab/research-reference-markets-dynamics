@@ -16,7 +16,7 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc06DUAL
 
 config = rmsc06DUAL.build_config(
-    end_time="10:00:00",
+    end_time="16:00:00",
     seed=1337,
 )
 
@@ -202,8 +202,15 @@ def get_treemap_fig() -> go.Figure:
     endingCashPercentage = df_sorted.EndingCashPercentage.tolist()
     endingCashAbsolut = df_sorted.EndingCashAbsolut.tolist()
     posnegs = df_sorted.PnLColor.tolist()
-    fig.data[0].customdata = np.column_stack([endingCashAbsolut, endingCashPercentage])
-    fig.data[0].texttemplate = "AgentID:%{label}<br>%{value}<br>PnL Absolut:%{customdata[0]}$<br>PnL Percent:%{customdata[1]}%"
+    submittedOrders = df_sorted.SubmittedOrders.tolist()
+
+    # substract column endingCashAbsolut from column paidFees
+    paidFees = df_sorted.PaidFees.div(100)
+    endingCashMinFees = [x - y for x, y in zip(endingCashAbsolut, paidFees)]
+    paidFees = paidFees.round(2).tolist()
+
+    fig.data[0].customdata = np.column_stack([endingCashAbsolut, endingCashPercentage, paidFees, submittedOrders, endingCashMinFees])
+    fig.data[0].texttemplate = "AgentID:%{label}<br>%{value}<br>PnL Absolut:%{customdata[0]}$<br>PnL Percent:%{customdata[1]}%<br>Paid Fees:%{customdata[2]}$<br>Submitted Orders:%{customdata[3]}<br>PnL Absolut (incl. Fees):%{customdata[4]}$"
     fig.data[0].marker.colors = posnegs
     fig.update_traces(root_color="lightgrey")
     fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
@@ -286,6 +293,10 @@ fig_exchange_turnover.add_trace(go.Scatter(x=ex_0_executed_orders.time_executed,
 fig_exchange_turnover.add_trace(go.Scatter(x=ex_1_executed_orders.time_executed, y=ex_1_executed_orders['cumsum_order_fee'], mode='lines', line_color="#a800ad", name="Exchange 1"))
 fig_exchange_volume.add_trace(go.Scatter(x=ex_0_executed_orders.time_executed, y=ex_0_executed_orders['cumsum_volume'], mode='lines', line_color="#ad0000", name="Exchange 0"))
 fig_exchange_volume.add_trace(go.Scatter(x=ex_1_executed_orders.time_executed, y=ex_1_executed_orders['cumsum_volume'], mode='lines', line_color="#a800ad", name="Exchange 1"))
+fig_executed_order.update_layout(title='Cumulated Traded Securities Qty.',)
+fig_executed_order_qty.update_layout(title='Cumulated Order Qty.',)
+fig_exchange_turnover.update_layout(title='Fees Turnover in $',)
+fig_exchange_volume.update_layout(title='Executed order Vol. in $',)
 
 
 execution_spreads = logs_df[logs_df.EventType.isin(["EXECUTION_SPREAD"])]
@@ -304,11 +315,11 @@ ex_1_fig_spreads = go.Figure()
 ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
 ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
 ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-ex_0_fig_spreads.update_layout(xaxis_title='Time', yaxis_title='spreads')
+ex_0_fig_spreads.update_layout(xaxis_title='Time', yaxis_title='spreads', title="Spreads Ex0")
 ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
 ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
 ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-ex_1_fig_spreads.update_layout(xaxis_title='Time', yaxis_title='spreads')
+ex_1_fig_spreads.update_layout(xaxis_title='Time', yaxis_title='spreads', title='Spreads Ex1',)
 """
     Speed of fills and fill rate
 """
@@ -352,16 +363,16 @@ ex_1_average_fill_rate = ex_1_order_executed_only_full_executed['fill_rate'].mea
 # ex_1_order_executed_only_full_executed = ex_1_order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
 ex_0_fig_speed = go.Figure()
 ex_0_fig_speed.add_trace(go.Scatter(x=ex_0_order_executed_only_full_executed.time_executed, y=ex_0_order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-ex_0_fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (ms)')
+ex_0_fig_speed.update_layout(title='Speed of executions Ex 0', xaxis_title='Time', yaxis_title='speed in (ms)')
 ex_1_fig_speed = go.Figure()
 ex_1_fig_speed.add_trace(go.Scatter(x=ex_1_order_executed_only_full_executed.time_executed, y=ex_1_order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-ex_1_fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (ms)')
+ex_1_fig_speed.update_layout(title='Speed of executions Ex 1', xaxis_title='Time', yaxis_title='speed in (ms)')
 ex_0_fig_fill_rate= go.Figure()
 ex_0_fig_fill_rate.add_trace(go.Scatter(x=ex_0_order_executed_only_full_executed.time_executed, y=ex_0_order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-ex_0_fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
+ex_0_fig_fill_rate.update_layout(title='Fill rate of executions Ex 0', xaxis_title='Time', yaxis_title='% of orders filled')
 ex_1_fig_fill_rate= go.Figure()
 ex_1_fig_fill_rate.add_trace(go.Scatter(x=ex_1_order_executed_only_full_executed.time_executed, y=ex_1_order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-ex_1_fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
+ex_1_fig_fill_rate.update_layout(title='Fill rate of executions Ex 1', xaxis_title='Time', yaxis_title='% of orders filled')
 
 
 """
@@ -512,10 +523,10 @@ app.layout = html.Div(
         ]),
         dbc.Row([
             dbc.Col(
-                dcc.Graph(id='the_graph9', figure=ex_1_fig_spreads, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph9', figure=ex_0_fig_spreads, config= {'displaylogo': False}),
             ),
             dbc.Col(
-                dcc.Graph(id='the_graph10', figure=ex_0_fig_spreads, config= {'displaylogo': False}),
+                dcc.Graph(id='the_graph10', figure=ex_1_fig_spreads, config= {'displaylogo': False}),
             ),
         ]),
         dbc.Row([
