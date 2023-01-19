@@ -18,19 +18,17 @@ from ..messages.query import QuerySpreadResponseMsg
 from ..orders import Side
 from .new_trading_agent import NewTradingAgent
 
+from ..fees import Fees
+
 from ..messages.marketdata import (
-    MarketDataMsg,
-    L1SubReqMsg,
-    L1DataMsg,
     L2SubReqMsg,
     L2DataMsg,
-    BookImbalanceDataMsg,
-    BookImbalanceSubReqMsg,
-    MarketDataEventMsg,
 )
 
 import logging
 logger = logging.getLogger(__name__)
+
+MIND_FEES = True
 
 class IntermarketSpreadArbitrageMachine(NewTradingAgent):
     """
@@ -39,6 +37,7 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
 
     Size is determined by the current order book situation on the exchanges.
     """
+
 
     def __init__(
         self,
@@ -144,6 +143,8 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
                     global best_ask_ex1
                     best_ask_ex1 = message.asks
 
+        # 0 = fix fee
+        #1 = maker taker fee
         if best_ask_ex0 and best_bid_ex0 and best_ask_ex1 and best_bid_ex1:
             # check if arbitrage opportunity exists
             if best_ask_ex0[0][0] < best_bid_ex1[0][0]:
@@ -151,11 +152,107 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
                 orders_ex1 = []
                 lvl = 0
                 ob_s = len(best_ask_ex1) if len(best_ask_ex1) < len(best_bid_ex0) else len(best_bid_ex0)
-                for x in range(1, ob_s):
+                for x in range(0, ob_s):
                     if best_ask_ex0[x][0] < best_bid_ex1[x][0]:
                         lvl += 1
                     else:
                         break
+                print("arbitrage for depth: ", lvl)
+                # arbitrage opportunity exists for deeper levels
+                num_lvl = lvl # 1
+                bid_offset = 0
+                tmp_rest_book_bid = 0
+                for x in range(0, num_lvl):
+                    tmp_rest_book_bid = best_bid_ex1[bid_offset][1] if tmp_rest_book_bid == 0 else tmp_rest_book_bid
+                    tmp_rest_book = best_ask_ex0[x][1]
+                    while ((tmp_rest_book > 0) and (best_ask_ex0[x][0] < best_bid_ex1[bid_offset][0])):
+                        if(tmp_rest_book > tmp_rest_book_bid):
+                            if(MIND_FEES == True):
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex0[x][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book_bid))
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book_bid, type=1)))
+                            else:
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex0[x][0], order_fee=0))
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=0))
+                            tmp_rest_book -= tmp_rest_book_bid
+                            bid_offset += 1
+                            tmp_rest_book_bid = best_bid_ex1[bid_offset][1]
+                            continue
+                        else:
+                            # buy 
+                            if(MIND_FEES == True):
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book))
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book, type=1)))
+                            else:
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=0))
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=0))
+                            tmp_rest_book_bid -= tmp_rest_book
+                            tmp_rest_book = 0
+                            continue
+                self.place_multiple_orders(orders_ex0, 0)
+                self.place_multiple_orders(orders_ex1, 1)
+                best_bid_ex0 = None
+                best_ask_ex0 = None
+                best_bid_ex1 = None
+                best_ask_ex1 = None
+                return
+            # check if arbitrage opportunity exists
+            elif best_ask_ex1[0][0] < best_bid_ex0[0][0]:
+                orders_ex0 = []
+                orders_ex1 = []
+                lvl = 0
+                ob_s = len(best_ask_ex1) if len(best_ask_ex1) < len(best_bid_ex0) else len(best_bid_ex0)
+                for x in range(0, ob_s):
+                    if best_ask_ex1[x][0] < best_bid_ex0[x][0]:
+                        lvl += 1
+                    else:
+                        break
+                print("arbitrage for depth: ", lvl)
+                # arbitrage opportunity exists for deeper levels
+                num_lvl = lvl # 1
+                bid_offset = 0
+                tmp_rest_book_bid = 0
+                for x in range(0, num_lvl):
+                    tmp_rest_book_bid = best_bid_ex0[bid_offset][1] if tmp_rest_book_bid == 0 else tmp_rest_book_bid
+                    tmp_rest_book = best_ask_ex1[x][1]
+                    while ((tmp_rest_book > 0) and (best_ask_ex1[x][0] < best_bid_ex0[bid_offset][0])):
+                        if(tmp_rest_book > tmp_rest_book_bid):
+                            if(MIND_FEES == True):
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex1[x][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book_bid, type=1)))
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book_bid))
+                            else:
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex1[x][0], order_fee=0))
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=0))
+                            tmp_rest_book -= tmp_rest_book_bid
+                            bid_offset += 1
+                            tmp_rest_book_bid = best_bid_ex0[bid_offset][1]
+                            continue
+                        else:
+                            if(MIND_FEES == True):
+                                # buy 
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book, type=1)))
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book))
+                            else:
+                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=0))
+                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=0))
+                            tmp_rest_book_bid -= tmp_rest_book
+                            tmp_rest_book = 0
+                            continue
+                self.place_multiple_orders(orders_ex0, 0)
+                self.place_multiple_orders(orders_ex1, 1)
+                best_bid_ex0 = None
+                best_ask_ex0 = None
+                best_bid_ex1 = None
+                best_ask_ex1 = None
+                return
+
+    def get_wake_frequency(self) -> NanosecondTime:
+        if not self.poisson_arrival:
+            return 1_000_000_000 # 1 second
+        else:
+            delta_time = self.random_state.exponential(scale=1_000_000_000) # 1 second
+            return int(round(delta_time))
+###
+
                 # if(lvl == 0):
                 #     if best_ask_ex0[0][1] > best_bid_ex1[0][1]:
                 #         orders_ex0.append(self.create_limit_order(self.symbol, best_bid_ex1[0][1], Side.BID, best_ask_ex0[0][0], order_fee=1))
@@ -178,45 +275,9 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
                 #         best_ask_ex1 = None
                 #         return
                 # else:
-                    # arbitrage opportunity exists for deeper levels
-                num_lvl = lvl
-                for x in range(0, num_lvl):
-                    bid_offset = lvl
-                    tmp_rest_book = best_bid_ex1[0][1]
-                    while ((tmp_rest_book > 0) and (best_ask_ex0[x][0] < best_bid_ex1[bid_offset][0])):
-                        if(tmp_rest_book > best_bid_ex1[bid_offset][1]):
-                            # buy
-                            orders_ex0.append(self.create_limit_order(self.symbol, best_bid_ex1[bid_offset][1], Side.BID, best_ask_ex0[x][0], order_fee=1))
-                            tmp_rest_book -= best_bid_ex1[bid_offset][1]
-                            # sell max amount of angebote at bids which are arbitragiable
-                            orders_ex1.append(self.create_limit_order(self.symbol, best_bid_ex1[bid_offset][1], Side.ASK, best_bid_ex1[bid_offset][0], order_fee=1))
-                            bid_offset += 1
-                            continue
-                        else:
-                            # buy 
-                            orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=1))
-                            orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=1))
-                            tmp_rest_book = 0
-                            bid_offset += 1
-                            continue
-                self.place_multiple_orders(orders_ex0, 0)
-                self.place_multiple_orders(orders_ex1, 1)
-                best_bid_ex0 = None
-                best_ask_ex0 = None
-                best_bid_ex1 = None
-                best_ask_ex1 = None
-                return
-            # check if arbitrage opportunity exists
-            elif best_ask_ex1[0][0] < best_bid_ex0[0][0]:
-                ob_s = len(best_ask_ex1) if len(best_ask_ex1) < len(best_bid_ex0) else len(best_bid_ex0)
-                orders_ex0 = []
-                orders_ex1 = []
-                lvl = 0
-                for x in range(0, ob_s):
-                    if best_ask_ex1[x][0] < best_bid_ex0[x][0]:
-                        lvl += 1
-                    else:
-                        break                
+
+
+
                 # if(lvl == 0):
                 #     if best_ask_ex1[0][1] > best_bid_ex0[0][1]:
                 #         orders_ex1.append(self.create_limit_order(self.symbol, best_bid_ex0[0][1], Side.BID, best_ask_ex1[0][0], order_fee=1))
@@ -242,40 +303,9 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
                 #         best_ask_ex1 = None
                 #         return
                 # else:
-                # arbitrage opportunity exists for deeper levels
-                num_lvl = lvl
-                for x in range(0, num_lvl):
-                    bid_offset = lvl
-                    tmp_rest_book = best_bid_ex0[0][1]
-                    while ((tmp_rest_book > 0) and (best_ask_ex1[x][0] < best_bid_ex0[bid_offset][0])):
-                        if(tmp_rest_book > best_bid_ex0[bid_offset][1]):
-                            # buy
-                            orders_ex1.append(self.create_limit_order(self.symbol, best_bid_ex0[bid_offset][1], Side.BID, best_ask_ex1[x][0], order_fee=1))
-                            tmp_rest_book -= best_bid_ex0[bid_offset][1]
-                            # sell max amount of angebote at bids which are arbitragiable
-                            orders_ex0.append(self.create_limit_order(self.symbol, best_bid_ex0[bid_offset][1], Side.ASK, best_bid_ex0[bid_offset][0], order_fee=1))
-                            bid_offset += 1
-                            continue
-                        else:
-                            # buy 
-                            orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=1))
-                            orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=1))
-                            tmp_rest_book = 0
-                            bid_offset += 1
-                            continue
-                self.place_multiple_orders(orders_ex0, 0)
-                self.place_multiple_orders(orders_ex1, 1)
-                best_bid_ex0 = None
-                best_ask_ex0 = None
-                best_bid_ex1 = None
-                best_ask_ex1 = None
-                return
-    def get_wake_frequency(self) -> NanosecondTime:
-        if not self.poisson_arrival:
-            return 1_000_000_000 # 1 second
-        else:
-            delta_time = self.random_state.exponential(scale=1_000_000_000)
-            return int(round(delta_time))
+
+
+###
 
 
 

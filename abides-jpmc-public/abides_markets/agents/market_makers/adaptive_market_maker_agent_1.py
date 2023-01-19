@@ -26,6 +26,8 @@ ANCHOR_MIDDLE_STR = "middle"
 ADAPTIVE_SPREAD_STR = "adaptive"
 INITIAL_SPREAD_VALUE = 50
 
+from ...fees import Fees
+MIND_FEES = True
 
 logger = logging.getLogger(__name__)
 
@@ -444,11 +446,18 @@ class AdaptiveMarketMakerAgent1(TradingAgent):
                 self.backstop_quantity,
                 bid_price,
             )
-            orders.append(
-                self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=1,
+            if(MIND_FEES == True):
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.backstop_quantity, type=0),
+                    )
                 )
-            )
+            else:
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.backstop_quantity, Side.BID, bid_price, order_fee=0,
+                    )
+                )
             bid_orders = bid_orders[1:]
 
             ask_price = ask_orders[-1]
@@ -458,11 +467,18 @@ class AdaptiveMarketMakerAgent1(TradingAgent):
                 self.backstop_quantity,
                 ask_price,
             )
-            orders.append(
-                self.create_limit_order(
-                    self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=1,
+            if(MIND_FEES == True):
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.backstop_quantity, type=0),
+                    )
                 )
-            )
+            else:
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.backstop_quantity, Side.ASK, ask_price, order_fee=0,
+                    )
+                )
             ask_orders = ask_orders[:-1]
 
         for bid_price in bid_orders:
@@ -472,11 +488,18 @@ class AdaptiveMarketMakerAgent1(TradingAgent):
                 self.buy_order_size,
                 bid_price,
             )
-            orders.append(
-                self.create_limit_order(
-                    self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=1,
+            if(MIND_FEES == True):
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.buy_order_size, type=0),
+                    )
                 )
-            )
+            else:
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.buy_order_size, Side.BID, bid_price, order_fee=0,
+                    )
+                )
 
         for ask_price in ask_orders:
             logger.debug(
@@ -485,12 +508,18 @@ class AdaptiveMarketMakerAgent1(TradingAgent):
                 self.sell_order_size,
                 ask_price,
             )
-            orders.append(
-                self.create_limit_order(
-                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=1,
+            if(MIND_FEES == True):
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.sell_order_size, type=0),
+                    )
                 )
-            )
-
+            else:
+                orders.append(
+                    self.create_limit_order(
+                        self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=0,
+                    )
+                )
         self.place_multiple_orders(orders)
 
     def get_wake_frequency(self) -> NanosecondTime:

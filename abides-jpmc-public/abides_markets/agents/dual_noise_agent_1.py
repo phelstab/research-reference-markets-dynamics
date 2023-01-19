@@ -10,7 +10,11 @@ from ..messages.query import QuerySpreadResponseMsg
 from ..orders import Side
 from .trading_agent_1 import TradingAgent
 
+from ..fees import Fees
+
 logger = logging.getLogger(__name__)
+
+MIND_FEES = True 
 
 class NoiseAgent_1(TradingAgent):
     """
@@ -155,9 +159,17 @@ class NoiseAgent_1(TradingAgent):
 
         if self.size > 0:
             if buy_indicator == 1 and ask:
-                self.place_limit_order(self.symbol, self.size, Side.BID, ask, order_fee=1)
+                if(MIND_FEES == True):
+                    fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                    self.place_limit_order(self.symbol, self.size, Side.BID, ask, order_fee=fee)
+                else:
+                    self.place_limit_order(self.symbol, self.size, Side.BID, ask, order_fee=0)
             elif not buy_indicator and bid:
-                self.place_limit_order(self.symbol, self.size, Side.ASK, bid, order_fee=1)
+                if(MIND_FEES == True):
+                    fee = Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                    self.place_limit_order(self.symbol, self.size, Side.ASK, bid, order_fee=fee)
+                else:
+                    self.place_limit_order(self.symbol, self.size, Side.ASK, bid, order_fee=0)
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message

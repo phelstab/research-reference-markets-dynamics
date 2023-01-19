@@ -17,7 +17,7 @@ from abides_markets.configs import rmsc06DUAL
 
 config = rmsc06DUAL.build_config(
     end_time="16:00:00",
-    seed=1337,
+    seed=18248124,
 )
 
 config.keys()

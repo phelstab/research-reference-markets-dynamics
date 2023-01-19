@@ -10,6 +10,8 @@ from ..messages.query import QuerySpreadResponseMsg
 from ..orders import Side
 from .new_trading_agent import NewTradingAgent
 
+MIND_FEES = True
+from ..fees import Fees
 
 class DualMomentumAgent(NewTradingAgent):
     """
@@ -57,6 +59,14 @@ class DualMomentumAgent(NewTradingAgent):
         self.avg_50_list: List[float] = []
         self.log_orders = log_orders
         self.state = "AWAITING_WAKEUP"
+        global best_bid_ex0
+        best_bid_ex0 = None
+        global best_ask_ex0
+        best_ask_ex0 = None 
+        global best_bid_ex1
+        best_bid_ex1 = None 
+        global best_ask_ex1
+        best_ask_ex1 = None 
 
     def kernel_starting(self, start_time: NanosecondTime) -> None:
         super().kernel_starting(start_time)
@@ -92,6 +102,20 @@ class DualMomentumAgent(NewTradingAgent):
             self.place_orders(bid, ask)
             self.set_wakeup(current_time + self.get_wake_frequency())
             self.state = "AWAITING_WAKEUP"
+            if sender_id == 0:
+                if message.bids:
+                    global best_bid_ex0 
+                    best_bid_ex0 = message.bids[0][0]
+                if message.asks:
+                    global best_ask_ex0
+                    best_ask_ex0 = message.asks[0][0]
+            elif sender_id == 1:
+                if message.bids:
+                    global best_bid_ex1
+                    best_bid_ex1 = message.bids[0][0]
+                if message.asks:
+                    global best_ask_ex1
+                    best_ask_ex1 = message.asks[0][0]
         elif (
             self.subscribe
             and self.state == "AWAITING_MARKET_DATA"
@@ -119,27 +143,46 @@ class DualMomentumAgent(NewTradingAgent):
                     self.size = self.order_size_model.sample(
                         random_state=self.random_state
                     )
-
                 rndm = self.random_state.randint(0, 1 + 1)
                 if self.size > 0:
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
-                        self.place_limit_order(
-                            self.symbol,
-                            quantity=self.size,
-                            side=Side.BID,
-                            limit_price=ask,
-                            order_fee=2,
-                            exchange_id=rndm
-                        )
+                        if(MIND_FEES == True):
+                            #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=Side.BID,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
+                            fee = Fees.get_fixed_market_fee(self) * self.size if rndm == 0 else Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                            self.place_market_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    order_fee=fee,
+                                    exchange_id=rndm
+                                    )
+                        else:
+                            self.place_market_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.BID,
+                                    order_fee=0,
+                                    exchange_id=rndm
+                                    )
                     else:
-                        self.place_limit_order(
-                            self.symbol,
-                            quantity=self.size,
-                            side=Side.ASK,
-                            limit_price=bid,
-                            order_fee=2,
-                            exchange_id=rndm
-                        )
+                        if(MIND_FEES == True):
+                            #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=Side.ASK,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
+                            fee = Fees.get_fixed_market_fee(self) * self.size if rndm == 0 else Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                            self.place_market_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    order_fee=fee,
+                                    exchange_id=rndm
+                                    )
+                        else:
+                            self.place_market_order(
+                                    self.symbol,
+                                    quantity=self.size,
+                                    side=Side.ASK,
+                                    order_fee=0,
+                                    exchange_id=rndm
+                                    )
 
     def get_wake_frequency(self) -> NanosecondTime:
         if not self.poisson_arrival:

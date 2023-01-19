@@ -488,7 +488,7 @@ class FixAdaptiveMarketMakerAgent(FixTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.get_fixed_market_fee(self) * self.buy_order_size,
+                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.get_fixed_market_fee(self) * self.sell_order_size,
                 )
             )
 

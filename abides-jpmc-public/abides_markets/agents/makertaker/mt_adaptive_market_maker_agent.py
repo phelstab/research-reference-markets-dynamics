@@ -487,7 +487,7 @@ class MTAdaptiveMarketMakerAgent(MTTradingAgent):
             )
             orders.append(
                 self.create_limit_order(
-                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.buy_order_size, type=0),
+                    self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=Fees.cal_maker_taker_market_fee(self, quantity=self.sell_order_size, type=0),
                 )
             )
 

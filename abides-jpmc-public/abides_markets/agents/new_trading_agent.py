@@ -594,6 +594,7 @@ class NewTradingAgent(FinancialAgent):
         symbol: str,
         quantity: int,
         side: Side,
+        exchange_id: int,
         order_id: Optional[int] = None,
         ignore_risk: bool = True,
         order_fee: Any = None,
@@ -640,7 +641,7 @@ class NewTradingAgent(FinancialAgent):
                     )
                     return
             self.orders[order.order_id] = deepcopy(order)
-            self.send_message(self.exchange_id, MarketOrderMsg(order))
+            self.send_message(exchange_id, MarketOrderMsg(order))
              # Add order to the executed_orders list log
             self.executed_orders.append(order)
             if self.log_orders:

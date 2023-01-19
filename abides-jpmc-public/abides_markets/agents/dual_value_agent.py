@@ -8,14 +8,13 @@ from abides_core import Message, NanosecondTime
 from ..messages.query import QuerySpreadResponseMsg
 from ..orders import Side
 from .new_trading_agent import NewTradingAgent
-from ..fees import Fees
 
 logger = logging.getLogger(__name__)
 
+from ..fees import Fees
+MIND_FEES = True
 
 class DualValueAgent(NewTradingAgent):
-
-
     def __init__(
         self,
         id: int,
@@ -284,38 +283,26 @@ class DualValueAgent(NewTradingAgent):
 
         # create logic for order type (market order or limit order), and add fees to order
         if self.size > 0:
-            
-            #is_maker_or_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=best_bid_ex0, current_best_ask=best_ask_ex0, side=side)
-            #fee_ex0 = Fees.cal_maker_taker_market_fee(self, price=p, quantity=self.size, type=is_maker_or_taker)
-            #fee_ex1 = Fees.cal_variable_market_fee(self, self.size, price=p)
-
-            # check if all orders are not null
-            # if best_bid_ex0 is not None and best_ask_ex0 is not None and best_bid_ex1 is not None and best_ask_ex1 is not None:
-            #     # print("best_bid_ex0: ", best_bid_ex0)
-            #     # print("best_ask_ex0: ", best_ask_ex0)
-            #     # print("best_bid_ex1: ", best_bid_ex1)
-            #     # print("best_ask_ex1: ", best_ask_ex1)
-            #     print("order size: ", self.size)
-                
-        
-            # TODO model erweitern um die fees auch zu berücksichtigen
-            exchange_id = self.exchange_fee_decision_model(fee0=0,
-                                                        fee1=0,
-                                                        side=side,
-                                                        bb0=best_bid_ex0,
-                                                        ba0=best_ask_ex0,
-                                                        bb1=best_bid_ex1,
-                                                        ba1=best_ask_ex1)
-            # give random number between 0 and 1 to decide if limit or market order
             rndm = self.random_state.randint(0, 1 + 1)
-
-            self.place_limit_order(symbol=self.symbol,
-                                    quantity=self.size,
-                                    side=side,
-                                    limit_price=p,
-                                    order_fee=2,
-                                    exchange_id=rndm
-                                    )
+            if(MIND_FEES == True):
+                #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=side,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
+                fee = Fees.get_fixed_market_fee(self) * self.size if rndm == 0 else Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                self.place_limit_order(symbol=self.symbol,
+                                        quantity=self.size,
+                                        side=side,
+                                        limit_price=p,
+                                        order_fee=fee,
+                                        exchange_id=rndm
+                                        )
+            else:
+                #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=side,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
+                self.place_limit_order(symbol=self.symbol,
+                                        quantity=self.size,
+                                        side=side,
+                                        limit_price=p,
+                                        order_fee=0,
+                                        exchange_id=rndm
+                                        )
 
     def receive_message(
         self, current_time: NanosecondTime, sender_id: int, message: Message
