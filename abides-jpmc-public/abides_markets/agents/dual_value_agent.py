@@ -283,25 +283,29 @@ class DualValueAgent(NewTradingAgent):
 
         # create logic for order type (market order or limit order), and add fees to order
         if self.size > 0:
-            rndm = self.random_state.randint(0, 1 + 1)
             if(MIND_FEES == True):
-                #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=side,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
-                fee = Fees.get_fixed_market_fee(self) * self.size if rndm == 0 else Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                # static 9 cents per security
+                fee_fix = Fees.get_fixed_market_fee(self)
+                b_maker_taker = Fees.cal_maker_taker_order(self, price=p, current_best_bid=best_bid_ex1, current_best_ask=best_ask_ex1, side=side)
+                # static 0.3 or -0.2 per security
+                fee_mt = Fees.cal_maker_taker_market_fee_static(self, type=b_maker_taker)
+                exchange_id = Fees.exchange_fee_decision_model(self, fee0=fee_fix, fee1=fee_mt, side=side, bb0=best_bid_ex0, ba0=best_ask_ex0, bb1=best_bid_ex1, ba1=best_ask_ex1)
+                fee = fee_fix * self.size if exchange_id == 0 else fee_mt * self.size
                 self.place_limit_order(symbol=self.symbol,
                                         quantity=self.size,
                                         side=side,
                                         limit_price=p,
                                         order_fee=fee,
-                                        exchange_id=rndm
+                                        exchange_id=exchange_id
                                         )
             else:
-                #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=side,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
+                exchange_id = Fees.exchange_fee_decision_model(self, fee0=0, fee1=0, side=side, bb0=best_bid_ex0, ba0=best_ask_ex0, bb1=best_bid_ex1, ba1=best_ask_ex1)
                 self.place_limit_order(symbol=self.symbol,
                                         quantity=self.size,
                                         side=side,
                                         limit_price=p,
                                         order_fee=0,
-                                        exchange_id=rndm
+                                        exchange_id=exchange_id
                                         )
 
     def receive_message(
@@ -354,29 +358,5 @@ class DualValueAgent(NewTradingAgent):
         return int(round(delta_time))
 
 
-    """
-        check if all prices are not none else flip a coin if exchanges have equal prices flip a coin
-    """
-    def exchange_fee_decision_model(self, fee0, fee1, side, bb0, ba0, bb1, ba1) -> int:
-        # TODO model erweitern um die fees auch zu berücksichtigen
-        if bb0 is not None and ba0 is not None and bb1 is not None and ba1 is not None:
-            # placing long (buy) order --> buying at cheaper price
-            if side == Side.BID:
-                if ba0 < ba1:
-                    return 0
-                elif ba0 == ba1:
-                    return self.random_state.randint(0, 2)
-                else:
-                    return 1
-            # placing short (sell) order --> selling at higher price
-            else: 
-                if bb0 > bb1:
-                    return 0
-                elif bb0 == bb1:
-                    return self.random_state.randint(0, 2)
-                else:
-                    return 1
-        else:
-            return self.random_state.randint(0, 2)
 
 

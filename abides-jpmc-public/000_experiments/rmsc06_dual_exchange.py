@@ -17,7 +17,8 @@ from abides_markets.configs import rmsc06DUAL
 
 config = rmsc06DUAL.build_config(
     end_time="16:00:00",
-    seed=18248124,
+    #seed=18248124,
+    seed=1337,
 )
 
 config.keys()
@@ -42,6 +43,34 @@ ex_1_name = Ex_1_order_book.owner.name
 ex_1_ob_imbalance = Ex_1_order_book.get_imbalance()
 Ex_1_L1 = Ex_1_order_book.get_L1_snapshots()
 Ex_1_L2 = Ex_1_order_book.get_L2_snapshots(nlevels=10)
+
+def format_title(title, subtitle=None, subtitle_font_size=14):
+    title = f'<b>{title}</b>'
+    if not subtitle:
+        return title
+    subtitle = f'<span style="font-size: {subtitle_font_size}px;">{subtitle}</span>'
+    return f'{title}<br>{subtitle}'
+
+
+custom_template = {
+    "layout": go.Layout(
+        font={
+            "family": "Times New Roman",
+            "size": 14,
+            "color": "#000000",
+        },
+        title={
+            "font": {
+                "family": "Times New Roman",
+                "size": 18,
+                "color": "#1f1f1f",
+            },
+        },
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+        colorway=px.colors.qualitative.G10,
+    )
+}
 
 def format_my_nanos(nanos):
     dt = datetime.datetime.fromtimestamp(nanos / 1e9)
@@ -83,13 +112,13 @@ Ex_0_orderbook = (px.line(prepare_orderbook_dataframe(Ex_0_L2)[0:40_000],
             animation_frame='time', 
             animation_group='time', 
             color='axes',
-            title='Order book depth chart of Exchange 0',
+            title=format_title("Order book DOM", "exchange 0"), 
             range_x=[999, 1001],
             range_y=[0, 1100],
             labels={'price': 'Price', 
                     'time': 'Time', 
                     'axes': 'Sides:',
-                    'vol': 'Cumulative Ordervolume',
+                    'vol': '<b>Cumulative Ordervolume</b>',
                  },   
             ))
 
@@ -135,13 +164,13 @@ Ex_1_orderbook = (px.line(prepare_orderbook_dataframe(Ex_1_L2)[0:40_000],
             animation_frame='time', 
             animation_group='time', 
             color='axes',
-            title='Order book depth chart of Exchange 1',
+            title=format_title("Order book DOM", "exchange 1"), 
             range_x=[999, 1001],
             range_y=[0, 1100],
             labels={'price': 'Price', 
                     'time': 'Time', 
                     'axes': 'Sides:',
-                    'vol': 'Cumulative Ordervolume',
+                    'vol': '<b>Cumulative Ordervolume</b>',
                  },   
             ))
 
@@ -253,11 +282,11 @@ Ex1_best_asks = Ex1_best_asks.drop_duplicates(subset=['time'])
 Ex_0_fig = go.Figure()
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_asks["price"], mode='markers', marker_size=3, name='best_asks'))
-Ex_0_fig.update_layout(title='Chart Exchange 0', xaxis_title='Time', yaxis_title='Price')
+Ex_0_fig.update_layout(title=format_title("Time Series", "exchange 0 - fixed fees"), xaxis_title='<b>Time</b>', yaxis_range=[995, 1005], yaxis_title='<b>Price</b>', template=custom_template)
 Ex_1_fig = go.Figure()
 Ex_1_fig.add_trace(go.Scatter(x=Ex1_best_bids["time"], y=Ex1_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
 Ex_1_fig.add_trace(go.Scatter(x=Ex1_best_bids["time"], y=Ex1_best_asks["price"],mode='markers', marker_size=3, name='best_asks'))
-Ex_1_fig.update_layout(title='Chart Exchange 1', xaxis_title='Time', yaxis_title='Price')
+Ex_1_fig.update_layout(title=format_title("Time Series", "exchange 1 - maker taker fees"), xaxis_title='<b>Time</b>', yaxis_range=[995, 1005], yaxis_title='<b>Price</b>', template=custom_template)
 
 """
     Market Shares Plotting
@@ -293,10 +322,11 @@ fig_exchange_turnover.add_trace(go.Scatter(x=ex_0_executed_orders.time_executed,
 fig_exchange_turnover.add_trace(go.Scatter(x=ex_1_executed_orders.time_executed, y=ex_1_executed_orders['cumsum_order_fee'], mode='lines', line_color="#a800ad", name="Exchange 1"))
 fig_exchange_volume.add_trace(go.Scatter(x=ex_0_executed_orders.time_executed, y=ex_0_executed_orders['cumsum_volume'], mode='lines', line_color="#ad0000", name="Exchange 0"))
 fig_exchange_volume.add_trace(go.Scatter(x=ex_1_executed_orders.time_executed, y=ex_1_executed_orders['cumsum_volume'], mode='lines', line_color="#a800ad", name="Exchange 1"))
-fig_executed_order.update_layout(title='Cumulated Traded Securities Qty.',)
-fig_executed_order_qty.update_layout(title='Cumulated Order Qty.',)
-fig_exchange_turnover.update_layout(title='Fees Turnover in $',)
-fig_exchange_volume.update_layout(title='Executed order Vol. in $',)
+fig_executed_order.update_layout(title=format_title("Cumulated Traded Securities", "quantity of securities"), template=custom_template)
+fig_executed_order_qty.update_layout(title=format_title("Cumulated Orders", "quantity of orders"), template=custom_template)
+fig_exchange_turnover.update_layout(title=format_title("Cumulated Turnover", "fees in $"), template=custom_template)
+fig_exchange_volume.update_layout(title=format_title("Cumulated Executed Order Volume", "(fill_price * fill_size) in $"), template=custom_template)
+
 
 
 execution_spreads = logs_df[logs_df.EventType.isin(["EXECUTION_SPREAD"])]
@@ -312,14 +342,14 @@ ex_0_mean_quo_spread = ex_0_spreads['quoted_spread'].mean()
 ex_1_mean_quo_spread = ex_1_spreads['quoted_spread'].mean()
 ex_0_fig_spreads = go.Figure()
 ex_1_fig_spreads = go.Figure()
-ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
-ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
-ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-ex_0_fig_spreads.update_layout(xaxis_title='Time', yaxis_title='spreads', title="Spreads Ex0")
-ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
-ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
-ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-ex_1_fig_spreads.update_layout(xaxis_title='Time', yaxis_title='spreads', title='Spreads Ex1',)
+ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['realized_spread'], mode='lines', name='Realized'))
+ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['effective_spread'], mode='lines', name='Effective'))
+ex_0_fig_spreads.add_trace(go.Scatter(x=ex_0_spreads.time, y=ex_0_spreads['quoted_spread'], mode='lines', name='Half Quoted'))
+ex_0_fig_spreads.update_layout(xaxis_title='<b>Time</b>', yaxis_title='<b>Spreads</b>', title=format_title("Spreads", "of exchange 0 (in %)"), template=custom_template)
+ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['realized_spread'], mode='lines', name='Realized'))
+ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['effective_spread'], mode='lines', name='Effective'))
+ex_1_fig_spreads.add_trace(go.Scatter(x=ex_1_spreads.time, y=ex_1_spreads['quoted_spread'], mode='lines', name='Half Quoted'))
+ex_1_fig_spreads.update_layout(xaxis_title='<b>Time</b>', yaxis_title='<b>Spreads</b>', title=format_title("Spreads", "of exchange 1 (in %)"), template=custom_template)
 """
     Speed of fills and fill rate
 """
@@ -363,16 +393,16 @@ ex_1_average_fill_rate = ex_1_order_executed_only_full_executed['fill_rate'].mea
 # ex_1_order_executed_only_full_executed = ex_1_order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
 ex_0_fig_speed = go.Figure()
 ex_0_fig_speed.add_trace(go.Scatter(x=ex_0_order_executed_only_full_executed.time_executed, y=ex_0_order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-ex_0_fig_speed.update_layout(title='Speed of executions Ex 0', xaxis_title='Time', yaxis_title='speed in (ms)')
+ex_0_fig_speed.update_layout(title=format_title("Speed Of Executions", "exchange 0"), xaxis_title='<b>Time</b>', yaxis_title='<b>Speed (ms)</b>', template=custom_template)
 ex_1_fig_speed = go.Figure()
 ex_1_fig_speed.add_trace(go.Scatter(x=ex_1_order_executed_only_full_executed.time_executed, y=ex_1_order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-ex_1_fig_speed.update_layout(title='Speed of executions Ex 1', xaxis_title='Time', yaxis_title='speed in (ms)')
+ex_1_fig_speed.update_layout(title=format_title("Speed Of Executions", "exchange 1"), xaxis_title='<b>Time</b>', yaxis_title='Speed (ms)', template=custom_template)
 ex_0_fig_fill_rate= go.Figure()
 ex_0_fig_fill_rate.add_trace(go.Scatter(x=ex_0_order_executed_only_full_executed.time_executed, y=ex_0_order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-ex_0_fig_fill_rate.update_layout(title='Fill rate of executions Ex 0', xaxis_title='Time', yaxis_title='% of orders filled')
+ex_0_fig_fill_rate.update_layout(title=format_title("Fill Rate Of Executions", "exchange 0"), xaxis_title='<b>Time</b>', yaxis_title='<b>Orders Filled (%)</b>', template=custom_template)
 ex_1_fig_fill_rate= go.Figure()
 ex_1_fig_fill_rate.add_trace(go.Scatter(x=ex_1_order_executed_only_full_executed.time_executed, y=ex_1_order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-ex_1_fig_fill_rate.update_layout(title='Fill rate of executions Ex 1', xaxis_title='Time', yaxis_title='% of orders filled')
+ex_1_fig_fill_rate.update_layout(title=format_title("Fill Rate Of Executions", "exchange 1"), xaxis_title='<b>Time</b>', yaxis_title='<b>Orders Filled (%)</b>', template=custom_template)
 
 
 """
@@ -553,6 +583,23 @@ app.layout = html.Div(
     ]
 )
 
+
+# export pdfs
+get_treemap_fig().write_image("treemap.pdf", engine="kaleido")
+Ex_0_fig.write_image("chart0.pdf", engine="kaleido")
+Ex_1_fig.write_image("chart1.pdf", engine="kaleido")
+# Ex_0_orderbook.write_image("orderbook0.pdf", engine="kaleido")
+# Ex_1_orderbook.write_image("orderbook1.pdf", engine="kaleido")
+fig_executed_order_qty.write_image("executed_order_qty.pdf", engine="kaleido")
+fig_executed_order.write_image("executed_order.pdf", engine="kaleido")
+fig_exchange_volume.write_image("exchange_volume.pdf", engine="kaleido")
+ex_0_fig_spreads.write_image("ex_0_spreads.pdf", engine="kaleido")
+ex_1_fig_spreads.write_image("ex_1_spreads.pdf", engine="kaleido")
+fig_exchange_turnover.write_image("exchange_turnover.pdf", engine="kaleido")
+ex_0_fig_speed.write_image("ex_0_speed.pdf", engine="kaleido")
+ex_1_fig_speed.write_image("ex_1_speed.pdf", engine="kaleido")
+ex_0_fig_fill_rate.write_image("ex_0_fill_rate.pdf", engine="kaleido")
+ex_1_fig_fill_rate.write_image("ex_1_fill_rate.pdf", engine="kaleido")
 app._favicon = ('icon.ico')
 
 # Run the app

@@ -151,43 +151,46 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
                 orders_ex0 = []
                 orders_ex1 = []
                 lvl = 0
-                ob_s = len(best_ask_ex1) if len(best_ask_ex1) < len(best_bid_ex0) else len(best_bid_ex0)
+                ob_s = len(best_ask_ex0) if len(best_ask_ex0) < len(best_bid_ex1) else len(best_bid_ex1)
                 for x in range(0, ob_s):
                     if best_ask_ex0[x][0] < best_bid_ex1[x][0]:
                         lvl += 1
                     else:
                         break
-                print("arbitrage for depth: ", lvl)
+                #print("arbitrage for depth: ", lvl)
                 # arbitrage opportunity exists for deeper levels
                 num_lvl = lvl # 1
                 bid_offset = 0
                 tmp_rest_book_bid = 0
                 for x in range(0, num_lvl):
-                    tmp_rest_book_bid = best_bid_ex1[bid_offset][1] if tmp_rest_book_bid == 0 else tmp_rest_book_bid
-                    tmp_rest_book = best_ask_ex0[x][1]
-                    while ((tmp_rest_book > 0) and (best_ask_ex0[x][0] < best_bid_ex1[bid_offset][0])):
-                        if(tmp_rest_book > tmp_rest_book_bid):
-                            if(MIND_FEES == True):
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex0[x][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book_bid))
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book_bid, type=1)))
+                    try:
+                        tmp_rest_book_bid = best_bid_ex1[bid_offset][1] if tmp_rest_book_bid == 0 else tmp_rest_book_bid
+                        tmp_rest_book = best_ask_ex0[x][1]
+                        while ((tmp_rest_book > 0) and (best_ask_ex0[x][0] < best_bid_ex1[bid_offset][0])):
+                            if(tmp_rest_book > tmp_rest_book_bid):
+                                if(MIND_FEES == True):
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex0[x][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book_bid))
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book_bid, type=1)))
+                                else:
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex0[x][0], order_fee=0))
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=0))
+                                tmp_rest_book -= tmp_rest_book_bid
+                                bid_offset += 1
+                                tmp_rest_book_bid = best_bid_ex1[bid_offset][1]
+                                continue
                             else:
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex0[x][0], order_fee=0))
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=0))
-                            tmp_rest_book -= tmp_rest_book_bid
-                            bid_offset += 1
-                            tmp_rest_book_bid = best_bid_ex1[bid_offset][1]
-                            continue
-                        else:
-                            # buy 
-                            if(MIND_FEES == True):
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book))
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book, type=1)))
-                            else:
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=0))
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=0))
-                            tmp_rest_book_bid -= tmp_rest_book
-                            tmp_rest_book = 0
-                            continue
+                                # buy 
+                                if(MIND_FEES == True):
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book))
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book, type=1)))
+                                else:
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex0[x][0], order_fee=0))
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex1[bid_offset][0], order_fee=0))
+                                tmp_rest_book_bid -= tmp_rest_book
+                                tmp_rest_book = 0
+                                continue
+                    except: # liquidity not deep enough
+                        pass
                 self.place_multiple_orders(orders_ex0, 0)
                 self.place_multiple_orders(orders_ex1, 1)
                 best_bid_ex0 = None
@@ -206,37 +209,40 @@ class IntermarketSpreadArbitrageMachine(NewTradingAgent):
                         lvl += 1
                     else:
                         break
-                print("arbitrage for depth: ", lvl)
+                #print("arbitrage for depth: ", lvl)
                 # arbitrage opportunity exists for deeper levels
                 num_lvl = lvl # 1
                 bid_offset = 0
                 tmp_rest_book_bid = 0
                 for x in range(0, num_lvl):
-                    tmp_rest_book_bid = best_bid_ex0[bid_offset][1] if tmp_rest_book_bid == 0 else tmp_rest_book_bid
-                    tmp_rest_book = best_ask_ex1[x][1]
-                    while ((tmp_rest_book > 0) and (best_ask_ex1[x][0] < best_bid_ex0[bid_offset][0])):
-                        if(tmp_rest_book > tmp_rest_book_bid):
-                            if(MIND_FEES == True):
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex1[x][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book_bid, type=1)))
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book_bid))
+                    try:
+                        tmp_rest_book_bid = best_bid_ex0[bid_offset][1] if tmp_rest_book_bid == 0 else tmp_rest_book_bid
+                        tmp_rest_book = best_ask_ex1[x][1]
+                        while ((tmp_rest_book > 0) and (best_ask_ex1[x][0] < best_bid_ex0[bid_offset][0])):
+                            if(tmp_rest_book > tmp_rest_book_bid):
+                                if(MIND_FEES == True):
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex1[x][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book_bid, type=1)))
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book_bid))
+                                else:
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex1[x][0], order_fee=0))
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=0))
+                                tmp_rest_book -= tmp_rest_book_bid
+                                bid_offset += 1
+                                tmp_rest_book_bid = best_bid_ex0[bid_offset][1]
+                                continue
                             else:
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.BID, best_ask_ex1[x][0], order_fee=0))
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book_bid, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=0))
-                            tmp_rest_book -= tmp_rest_book_bid
-                            bid_offset += 1
-                            tmp_rest_book_bid = best_bid_ex0[bid_offset][1]
-                            continue
-                        else:
-                            if(MIND_FEES == True):
-                                # buy 
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book, type=1)))
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book))
-                            else:
-                                orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=0))
-                                orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=0))
-                            tmp_rest_book_bid -= tmp_rest_book
-                            tmp_rest_book = 0
-                            continue
+                                if(MIND_FEES == True):
+                                    # buy 
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=Fees.cal_maker_taker_market_fee(self, quantity=tmp_rest_book, type=1)))
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=Fees.get_fixed_market_fee(self) * tmp_rest_book))
+                                else:
+                                    orders_ex1.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.BID, best_ask_ex1[x][0], order_fee=0))
+                                    orders_ex0.append(self.create_limit_order(self.symbol, tmp_rest_book, Side.ASK, best_bid_ex0[bid_offset][0], order_fee=0))
+                                tmp_rest_book_bid -= tmp_rest_book
+                                tmp_rest_book = 0
+                                continue
+                    except: # liquidity not deep enough
+                        pass
                 self.place_multiple_orders(orders_ex0, 0)
                 self.place_multiple_orders(orders_ex1, 1)
                 best_bid_ex0 = None

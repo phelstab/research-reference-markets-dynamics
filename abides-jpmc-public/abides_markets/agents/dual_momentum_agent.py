@@ -10,8 +10,8 @@ from ..messages.query import QuerySpreadResponseMsg
 from ..orders import Side
 from .new_trading_agent import NewTradingAgent
 
-MIND_FEES = True
 from ..fees import Fees
+MIND_FEES = True
 
 class DualMomentumAgent(NewTradingAgent):
     """
@@ -143,45 +143,50 @@ class DualMomentumAgent(NewTradingAgent):
                     self.size = self.order_size_model.sample(
                         random_state=self.random_state
                     )
-                rndm = self.random_state.randint(0, 1 + 1)
                 if self.size > 0:
                     if self.avg_20_list[-1] >= self.avg_50_list[-1]:
                         if(MIND_FEES == True):
-                            #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=Side.BID,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
-                            fee = Fees.get_fixed_market_fee(self) * self.size if rndm == 0 else Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                            fee_fix = Fees.get_fixed_market_fee(self)
+                            fee_mt = Fees.cal_maker_taker_market_fee_static(self, type=1)
+                            exchange_id = Fees.exchange_fee_decision_model(self, fee0=fee_fix, fee1=fee_mt, side=Side.BID, bb0=best_bid_ex0, ba0=best_ask_ex0, bb1=best_bid_ex1, ba1=best_ask_ex1)
+                            fee = fee_fix * self.size if exchange_id == 0 else fee_mt * self.size
                             self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.BID,
                                     order_fee=fee,
-                                    exchange_id=rndm
+                                    exchange_id=exchange_id
                                     )
                         else:
+                            exchange_id = Fees.exchange_fee_decision_model(self, fee0=0, fee1=0, side=Side.BID, bb0=best_bid_ex0, ba0=best_ask_ex0, bb1=best_bid_ex1, ba1=best_ask_ex1)
                             self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.BID,
                                     order_fee=0,
-                                    exchange_id=rndm
+                                    exchange_id=exchange_id
                                     )
                     else:
                         if(MIND_FEES == True):
-                            #exchange_id = self.exchange_fee_decision_model(fee0=0,fee1=0,side=Side.ASK,bb0=best_bid_ex0,ba0=best_ask_ex0,bb1=best_bid_ex1,ba1=best_ask_ex1)
-                            fee = Fees.get_fixed_market_fee(self) * self.size if rndm == 0 else Fees.cal_maker_taker_market_fee(self, quantity=self.size, type=1)
+                            fee_fix = Fees.get_fixed_market_fee(self)
+                            fee_mt = Fees.cal_maker_taker_market_fee_static(self, type=1)
+                            exchange_id = Fees.exchange_fee_decision_model(self, fee0=fee_fix, fee1=fee_mt, side=Side.ASK, bb0=best_bid_ex0, ba0=best_ask_ex0, bb1=best_bid_ex1, ba1=best_ask_ex1)
+                            fee = fee_fix * self.size if exchange_id == 0 else fee_mt * self.size
                             self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.ASK,
                                     order_fee=fee,
-                                    exchange_id=rndm
+                                    exchange_id=exchange_id
                                     )
                         else:
+                            exchange_id = Fees.exchange_fee_decision_model(self, fee0=0, fee1=0, side=Side.ASK, bb0=best_bid_ex0, ba0=best_ask_ex0, bb1=best_bid_ex1, ba1=best_ask_ex1)
                             self.place_market_order(
                                     self.symbol,
                                     quantity=self.size,
                                     side=Side.ASK,
                                     order_fee=0,
-                                    exchange_id=rndm
+                                    exchange_id=exchange_id
                                     )
 
     def get_wake_frequency(self) -> NanosecondTime:

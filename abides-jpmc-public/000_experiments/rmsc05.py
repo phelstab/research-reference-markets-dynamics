@@ -16,7 +16,7 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc05nofee
 
 config = rmsc05nofee.build_config(
-    end_time="16:00:00",
+    end_time="10:00:00",
     seed=11111111,
 )
 
@@ -34,6 +34,33 @@ ex_0_ob_imbalance = Ex_0_order_book.get_imbalance()
 Ex_0_L1 = Ex_0_order_book.get_L1_snapshots()
 Ex_0_L2 = Ex_0_order_book.get_L2_snapshots(nlevels=10)
 
+def format_title(title, subtitle=None, subtitle_font_size=14):
+    title = f'<b>{title}</b>'
+    if not subtitle:
+        return title
+    subtitle = f'<span style="font-size: {subtitle_font_size}px;">{subtitle}</span>'
+    return f'{title}<br>{subtitle}'
+
+
+custom_template = {
+    "layout": go.Layout(
+        font={
+            "family": "Times New Roman",
+            "size": 12,
+            "color": "#000000",
+        },
+        title={
+            "font": {
+                "family": "Times New Roman",
+                "size": 18,
+                "color": "#1f1f1f",
+            },
+        },
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+        colorway=px.colors.qualitative.G10,
+    )
+}
 """
     Agents Treemap Plotting
 """
@@ -77,13 +104,13 @@ Ex_0_orderbook = (px.line(prepare_orderbook_dataframe(Ex_0_L2)[0:40_000],
             animation_frame='time', 
             animation_group='time', 
             color='axes',
-            title='Order book depth chart of Exchange 0',
+            title=format_title("Order book DOM", "(Depth of Market)"), 
             range_x=[999, 1001],
             range_y=[0, 1100],
             labels={'price': 'Price', 
                     'time': 'Time', 
                     'axes': 'Sides:',
-                    'vol': 'Cumulative Ordervolume',
+                    'vol': '<b>Cumulative Ordervolume</b>',
                  },   
             ))
 
@@ -178,7 +205,7 @@ Ex0_best_asks['price'] = Ex0_best_asks['price'].div(100)
 Ex_0_fig = go.Figure()
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_asks["price"], mode='markers', marker_size=3, name='best_asks'))
-Ex_0_fig.update_layout(title='Order book of Exchange 0', xaxis_title='Time', yaxis_title='Price')
+Ex_0_fig.update_layout(title=format_title("Time Series", "no fees"), xaxis_title='<b>Time</b>', yaxis_title='<b>Price</b>', template=custom_template)
 
 
 """
@@ -207,7 +234,7 @@ fig_spreads = go.Figure()
 fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
 fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
 fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-fig_spreads.update_layout(title='Spreads', xaxis_title='Time', yaxis_title='spreads')
+fig_spreads.update_layout(xaxis_title='<b>Time</b>', yaxis_title='<b>Spreads</b>', title=format_title("Spreads", "(in %)"), template=custom_template)
 
 """
     Speed of fills and fill rate
@@ -241,10 +268,10 @@ average_fill_rate = order_executed_only_full_executed['fill_rate'].mean()
 order_executed_only_full_executed = order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
 fig_speed = go.Figure()
 fig_speed.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-fig_speed.update_layout(title='Speed of executions', xaxis_title='Time', yaxis_title='speed in (ms)')
+fig_speed.update_layout(title=format_title("Speed Of Executions", "(in milliseconds)"), xaxis_title='<b>Time</b>', yaxis_title='<b>Speed</b>', template=custom_template)
 fig_fill_rate= go.Figure()
 fig_fill_rate.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-fig_fill_rate.update_layout(title='Fill rate of executions', xaxis_title='Time', yaxis_title='% of orders filled')
+fig_fill_rate.update_layout(title=format_title("Fill Rate Of Executions", "(in %)"), xaxis_title='<b>Time</b>', yaxis_title='<b>Orders Filled</b>', template=custom_template)
 
 
 
@@ -262,6 +289,11 @@ fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_executed, y=ex
 
 fig_exchange_volume = go.Figure()
 fig_exchange_volume.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders['cumsum_volume'], mode='lines', line_color="#016657"))
+
+fig_executed_order.update_layout(title=format_title("Cumulated Traded Securities", "quantity of securities"), template=custom_template)
+fig_executed_order_qty.update_layout(title=format_title("Cumulated Orders", "quantity of orders"), template=custom_template)
+fig_exchange_turnover.update_layout(title=format_title("Cumulated Turnover", "fees in $"), template=custom_template)
+fig_exchange_volume.update_layout(title=format_title("Cumulated Executed Order Volume", "(fill_price * fill_size) in $"), template=custom_template)
 
 
 
@@ -324,181 +356,6 @@ Header_component = html.H3("Agent-Based Interactive Discrete Event Simulation Po
 """
     Update the figures
 """
-treemap = get_treemap_fig()
-fig_speed.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Speed (in sec.)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-fig_fill_rate.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Fill Rate (in %)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-fig_spreads.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Spreads (in %)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-fig_exchange_turnover.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Turnaround (in $)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-Ex_0_orderbook.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Cum. Order Qty.",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-Ex_0_fig.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Price (in $)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-treemap.update_layout(
-    title="",
-)
-fig_executed_order.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Cum. Traded Qty.",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-fig_executed_order_qty.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Order Qty.",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
-fig_exchange_volume.update_layout(
-    title="",
-    xaxis_title="Time Steps (ns)",
-    yaxis_title="Executed Order Vol. (in $)",
-    yaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=35,
-        color="#0d0d0d",
-        ),
-    ),
-    xaxis = dict(
-        tickfont=dict(
-        family="Times New Roman",
-        size=15,
-        color="#0d0d0d",
-        ),
-    ),
-)
 # Design the app layout
 app.layout = html.Div(
     [
