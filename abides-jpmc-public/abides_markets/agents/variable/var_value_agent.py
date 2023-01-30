@@ -289,7 +289,7 @@ class VarValueAgent(VarTradingAgent):
                         return
                     elif(self.random_state.rand() < Fees.get_ign_prob(self)):
                         # adjust the price
-                        price_adjust = (market_surplus * (-1) + fee) / (fee)
+                        price_adjust = (fee) / (self.size)
                         price_adjust = math.ceil(price_adjust)
                         self.place_limit_order(self.symbol, self.size, side, p+price_adjust, order_fee=fee)
                         return
@@ -302,7 +302,7 @@ class VarValueAgent(VarTradingAgent):
                         return
                     elif(self.random_state.rand() < Fees.get_ign_prob(self)):
                         # adjust the price
-                        price_adjust = (market_surplus * (-1) + fee) / (fee)
+                        price_adjust = (fee) / (self.size)
                         price_adjust = math.ceil(price_adjust)
                         self.place_limit_order(self.symbol, self.size, side, p-price_adjust, order_fee=fee)
                         return

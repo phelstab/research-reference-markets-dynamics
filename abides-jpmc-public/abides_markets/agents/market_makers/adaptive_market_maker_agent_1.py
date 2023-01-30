@@ -204,7 +204,15 @@ class AdaptiveMarketMakerAgent1(TradingAgent):
                 BookImbalanceSubReqMsg(
                     symbol=self.symbol,
                     min_imbalance=self.min_imbalance,
-                )
+                ),
+                exchange_id=1,
+            )
+            super().request_data_subscription(
+                BookImbalanceSubReqMsg(
+                    symbol=self.symbol,
+                    min_imbalance=self.min_imbalance,
+                ),
+                exchange_id=0,
             )
             self.last_time_book_order = current_time
             self.has_subscribed = True

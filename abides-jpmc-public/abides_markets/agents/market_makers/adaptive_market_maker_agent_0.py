@@ -204,7 +204,16 @@ class AdaptiveMarketMakerAgent0(TradingAgent):
                 BookImbalanceSubReqMsg(
                     symbol=self.symbol,
                     min_imbalance=self.min_imbalance,
-                )
+                    ),
+                exchange_id=1,
+            )
+
+            super().request_data_subscription(
+                BookImbalanceSubReqMsg(
+                    symbol=self.symbol,
+                    min_imbalance=self.min_imbalance,
+                ),
+                exchange_id=0,
             )
             self.last_time_book_order = current_time
             self.has_subscribed = True
@@ -520,7 +529,6 @@ class AdaptiveMarketMakerAgent0(TradingAgent):
                         self.symbol, self.sell_order_size, Side.ASK, ask_price, order_fee=0
                     )
                 )
-
         self.place_multiple_orders(orders)
 
     def get_wake_frequency(self) -> NanosecondTime:

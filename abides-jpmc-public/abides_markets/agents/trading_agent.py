@@ -162,7 +162,7 @@ class TradingAgent(FinancialAgent):
 
         # Find an exchange with which we can place orders.  It is guaranteed
         # to exist by now (if there is one).
-        self.exchange_id: int = self.kernel.find_agents_by_type(ExchangeAgent)[0]
+        self.exchange_id: int = 0
 
         logger.debug(
             f"Agent {self.id} requested agent of type Agent.ExchangeAgent.  Given Agent ID: {self.exchange_id}"
@@ -244,7 +244,7 @@ class TradingAgent(FinancialAgent):
         return (self.mkt_open and self.mkt_close) and not self.mkt_closed
 
     def request_data_subscription(
-        self, subscription_message: MarketDataSubReqMsg
+        self, subscription_message: MarketDataSubReqMsg, exchange_id: int
     ) -> None:
         """
         Used by any Trading Agent subclass to create a subscription to market data from
@@ -256,7 +256,7 @@ class TradingAgent(FinancialAgent):
 
         subscription_message.cancel = False
 
-        self.send_message(recipient_id=self.exchange_id, message=subscription_message)
+        self.send_message(recipient_id=exchange_id, message=subscription_message)
 
     def cancel_data_subscription(
         self, subscription_message: MarketDataSubReqMsg

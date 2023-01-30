@@ -240,6 +240,7 @@ def build_config(
     agent_count += num_noise_agents
     agent_types.extend(["NoiseAgent"])
 
+
     agents.extend(
         [
             DualValueAgent(
@@ -263,37 +264,6 @@ def build_config(
     )
     agent_count += num_value_agents
     agent_types.extend(["ValueAgent"])
-
-    agents.extend(
-        [
-            AdaptiveMarketMakerAgent0(
-                id=j,
-                name="ADAPTIVE_POV_MARKET_MAKER_AGENT_0_{}".format(j),
-                type="AdaptivePOVMarketMakerAgent0",
-                symbol=ticker,
-                starting_cash=starting_cash,
-                pov=MM_PARAMS[idx][1],
-                min_order_size=MM_PARAMS[idx][4],
-                window_size=MM_PARAMS[idx][0],
-                num_ticks=MM_PARAMS[idx][2],
-                wake_up_freq=MM_PARAMS[idx][3],
-                poisson_arrival=True,
-                cancel_limit_delay=mm_cancel_limit_delay,
-                skew_beta=mm_skew_beta,
-                price_skew_param=mm_price_skew,
-                level_spacing=mm_level_spacing,
-                spread_alpha=mm_spread_alpha,
-                backstop_quantity=mm_backstop_quantity,
-                log_orders=log_orders,
-                random_state=np.random.RandomState(
-                    seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
-                ),
-            )
-            for idx, j in enumerate(range(agent_count, agent_count + NUM_MM))
-        ]
-    )
-    agent_count += NUM_MM
-    agent_types.extend("POVMarketMakerAgent")
 
     agents.extend(
     [
@@ -325,6 +295,38 @@ def build_config(
     )
     agent_count += NUM_MM
     agent_types.extend("POVMarketMakerAgent")
+
+    agents.extend(
+    [
+        AdaptiveMarketMakerAgent0(
+            id=j,
+            name="ADAPTIVE_POV_MARKET_MAKER_AGENT_0_{}".format(j),
+            type="AdaptivePOVMarketMakerAgent0",
+            symbol=ticker,
+            starting_cash=starting_cash,
+            pov=MM_PARAMS[idx][1],
+            min_order_size=MM_PARAMS[idx][4],
+            window_size=MM_PARAMS[idx][0],
+            num_ticks=MM_PARAMS[idx][2],
+            wake_up_freq=MM_PARAMS[idx][3],
+            poisson_arrival=True,
+            cancel_limit_delay=mm_cancel_limit_delay,
+            skew_beta=mm_skew_beta,
+            price_skew_param=mm_price_skew,
+            level_spacing=mm_level_spacing,
+            spread_alpha=mm_spread_alpha,
+            backstop_quantity=mm_backstop_quantity,
+            log_orders=log_orders,
+            random_state=np.random.RandomState(
+                seed=np.random.randint(low=0, high=2 ** 32, dtype="uint64")
+            ),
+        )
+            for idx, j in enumerate(range(agent_count, agent_count + NUM_MM))
+        ]
+    )
+    agent_count += NUM_MM
+    agent_types.extend("POVMarketMakerAgent")
+
 
     agents.extend(
         [

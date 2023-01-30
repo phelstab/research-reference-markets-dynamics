@@ -8,24 +8,29 @@ from abides_core import Message, NanosecondTime
 
 from .messages.query import QuerySpreadResponseMsg
 from .orders import Side
-
+import random
 """
     Fees for different exchanges
 """
 # https://www.sec.gov/spotlight/emsac/memo-maker-taker-fees-on-equities-exchanges.pdf
 #MAKER_REBATE = -0.2 # $0.002 per share to post liquidity (i.e., 20 cents per 100 shares)
 #TAKER_FEE = 0.3 # $0.003 per share to take liquidity (i.e., 30 cents per 100 shares)
-MAKER_REBATE = -70 # 90 cents
-TAKER_FEE = 90 # 0.90
+MAKER_REBATE = -0.2 # 90 cents
+TAKER_FEE = 0.3 # 0.90
+
+MAKER_REBATE_DUAL = -10 # -10 cents
+TAKER_FEE_DUAL = 20 # 0.20
+
+
 # boerse stuttgart group (european style variable fees for options)
 VAR_FEE = 0.0095 # 0.95%
 VAR_LIMIT = 110_001 # 1,100.01 $
 VAR_LIMIT_FEE = 1190 # 11.90$
 
 # source: https://www.cmegroup.com/company/clearing-fees.html
-FIX_LIMIT_FEE = 36 # CME equitiy futures 0.80$ per contract on the electronic trading platform GLOBEX 
+FIX_LIMIT_FEE = 9 # CME equitiy futures 0.80$ per contract on the electronic trading platform GLOBEX 
 
-PERCENT = 0.15
+PERCENT = 0.25
 
 #https://www.cmegroup.com/company/clearing-fees.html
 #vs.
@@ -74,9 +79,9 @@ class Fees():
 
     def cal_maker_taker_market_fee_static(self, type) -> int:
         if type == 0:
-            return math.floor(MAKER_REBATE)
+            return math.floor(MAKER_REBATE_DUAL)
         else:
-            return math.ceil(TAKER_FEE)
+            return math.ceil(TAKER_FEE_DUAL)
     """
         Calculates the market fee for the current order.
     """
@@ -92,14 +97,14 @@ class Fees():
     """
     def exchange_fee_decision_model(self, fee0, fee1, side, bb0, ba0, bb1, ba1) -> int:
         #if(True):
-        if(self.random_state.rand() > Fees.get_ign_prob(self)): # 50% chance to prices
+        if(self.random_state.rand() < Fees.get_ign_prob(self)): # 75% chance of random exchange
             return self.random_state.randint(0, 2)
         if bb0 is not None and ba0 is not None and bb1 is not None and ba1 is not None :
             # placing long (buy) order --> buying at cheaper price
             if side == side.BID:
                 if ba0 + fee0 < ba1 + fee1:
                     return 0
-                elif ba0 == ba1:
+                elif ba0 + fee0 == ba1 + fee1:
                     return self.random_state.randint(0, 2)
                 else:
                     return 1
@@ -107,7 +112,7 @@ class Fees():
             else: 
                 if bb0 - fee0 > bb1 - fee1:
                     return 0
-                elif bb0 == bb1:
+                elif bb0 - fee0 == bb1 - fee1:
                     return self.random_state.randint(0, 2)
                 else:
                     return 1       
