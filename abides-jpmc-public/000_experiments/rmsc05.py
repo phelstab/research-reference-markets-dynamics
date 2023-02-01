@@ -13,11 +13,11 @@ import datetime
 
 from abides_core import abides
 from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
-from abides_markets.configs import rmsc05nofee
+from abides_markets.configs import rmsc05MT
 
-config = rmsc05nofee.build_config(
-    end_time="10:00:00",
-    seed=11111111,
+config = rmsc05MT.build_config(
+    end_time="16:00:00",
+    seed=1337,
 )
 
 config.keys()
@@ -35,7 +35,7 @@ Ex_0_L1 = Ex_0_order_book.get_L1_snapshots()
 Ex_0_L2 = Ex_0_order_book.get_L2_snapshots(nlevels=10)
 
 def format_title(title, subtitle=None, subtitle_font_size=14):
-    title = f'<b>{title}</b>'
+    title = f'{title}'
     if not subtitle:
         return title
     subtitle = f'<span style="font-size: {subtitle_font_size}px;">{subtitle}</span>'
@@ -46,21 +46,111 @@ custom_template = {
     "layout": go.Layout(
         font={
             "family": "Times New Roman",
-            "size": 12,
+            "size": 15,
             "color": "#000000",
         },
         title={
             "font": {
                 "family": "Times New Roman",
-                "size": 18,
+                "size": 15,
                 "color": "#1f1f1f",
             },
         },
+        margin=dict(l=45, r=5, t=5, b=20),
         plot_bgcolor="#ffffff",
         paper_bgcolor="#ffffff",
+        yaxis = dict(ticks='outside', showgrid=True,mirror=True,showline=True ),
+        xaxis = dict(ticks='outside',showgrid=True, mirror=True,showline=True, tickfont=dict(size=10)),
+        colorway=px.colors.qualitative.G10,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+}
+
+
+custom_template_speed_fill_rate = {
+    "layout": go.Layout(
+        font={
+            "family": "Times New Roman",
+             "size": 15,
+            "color": "#000000",
+        },
+        title={
+            "font": {
+                "family": "Times New Roman",
+                 "size": 15,
+                "color": "#1f1f1f",
+            },
+        },
+        margin=dict(l=40, r=5, t=25, b=20),
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+        yaxis = dict(ticks='outside', showgrid=True,mirror=True,showline=True ),
+        xaxis = dict(ticks='outside',showgrid=True, mirror=True,showline=True, tickfont=dict(size=10)),
         colorway=px.colors.qualitative.G10,
     )
 }
+
+custom_template_chart = {
+    "layout": go.Layout(
+        font={
+            "family": "Times New Roman",
+             "size": 15,
+            "color": "#000000",
+        },
+        title={
+            "font": {
+                "family": "Times New Roman",
+                 "size": 15,
+                "color": "#1f1f1f",
+            },
+        },
+        margin=dict(l=65, r=5, t=25, b=20),
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+        yaxis = dict(ticks='outside', showgrid=True,mirror=True,showline=True ),
+        xaxis = dict(ticks='outside',showgrid=True, mirror=True,showline=True, tickfont=dict(size=10)),
+        colorway=px.colors.qualitative.G10,
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            bordercolor="Black",
+            borderwidth=1,
+        )
+    )
+}
+
+custom_template_executed_order = {
+    "layout": go.Layout(
+        font={
+            "family": "Times New Roman",
+             "size": 15,
+            "color": "#000000",
+        },
+        title={
+            "font": {
+                "family": "Times New Roman",
+                 "size": 15,
+                "color": "#1f1f1f",
+            },
+        },
+        margin=dict(l=50, r=5, t=25, b=20),
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+        yaxis = dict(ticks='outside', showgrid=True,mirror=True,showline=True ),
+        xaxis = dict(ticks='outside',showgrid=True, mirror=True,showline=True, tickfont=dict(size=10)),
+        colorway=px.colors.qualitative.G10,
+    )
+}
+
 """
     Agents Treemap Plotting
 """
@@ -110,7 +200,7 @@ Ex_0_orderbook = (px.line(prepare_orderbook_dataframe(Ex_0_L2)[0:40_000],
             labels={'price': 'Price', 
                     'time': 'Time', 
                     'axes': 'Sides:',
-                    'vol': '<b>Cumulative Ordervolume</b>',
+                    'vol': 'Cumulative Ordervolume',
                  },   
             ))
 
@@ -205,7 +295,7 @@ Ex0_best_asks['price'] = Ex0_best_asks['price'].div(100)
 Ex_0_fig = go.Figure()
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_bids["price"], mode='markers', marker_size=3, name='best_bids'))
 Ex_0_fig.add_trace(go.Scatter(x=Ex0_best_bids["time"], y=Ex0_best_asks["price"], mode='markers', marker_size=3, name='best_asks'))
-Ex_0_fig.update_layout(title=format_title("Time Series", "no fees"), xaxis_title='<b>Time</b>', yaxis_title='<b>Price</b>', template=custom_template)
+Ex_0_fig.update_layout(title="Time Series (-0.002 maker, 0.003 taker)", yaxis_title='Price', template=custom_template_chart,width=450,height=170,)
 
 
 """
@@ -231,10 +321,10 @@ average_effective_spreads = execution_spreads['effective_spread'].mean()
 # average of quoted spreads
 average_quoted_spreads = execution_spreads['quoted_spread'].mean()
 fig_spreads = go.Figure()
-fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='Realized (in %)'))
-fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='Effective (in %)'))
-fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='Half Quoted (in %)'))
-fig_spreads.update_layout(xaxis_title='<b>Time</b>', yaxis_title='<b>Spreads</b>', title=format_title("Spreads", "(in %)"), template=custom_template)
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['realized_spread'], mode='lines', name='Realized'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['effective_spread'], mode='lines', name='Effective'))
+fig_spreads.add_trace(go.Scatter(x=execution_spreads.time, y=execution_spreads['quoted_spread'], mode='lines', name='Half Quoted'))
+fig_spreads.update_layout( template=custom_template,width=450,height=170,)
 
 """
     Speed of fills and fill rate
@@ -268,10 +358,10 @@ average_fill_rate = order_executed_only_full_executed['fill_rate'].mean()
 order_executed_only_full_executed = order_executed_only_full_executed.sort_values(by=['time_executed']).reset_index()
 fig_speed = go.Figure()
 fig_speed.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.speed_of_fill, mode='lines', name='Speed of executions (ms)'))
-fig_speed.update_layout(title=format_title("Speed Of Executions", "(in milliseconds)"), xaxis_title='<b>Time</b>', yaxis_title='<b>Speed</b>', template=custom_template)
+fig_speed.update_layout(title="Speed Of Executions (in milliseconds)",  template=custom_template_speed_fill_rate,width=450,height=170,)
 fig_fill_rate= go.Figure()
 fig_fill_rate.add_trace(go.Scatter(x=order_executed_only_full_executed.time_executed, y=order_executed_only_full_executed.fill_rate, mode='lines', name='Fill rates of executions'))
-fig_fill_rate.update_layout(title=format_title("Fill Rate Of Executions", "(in %)"), xaxis_title='<b>Time</b>', yaxis_title='<b>Orders Filled</b>', template=custom_template)
+fig_fill_rate.update_layout(title="Fill Rate Of Executions (in %)", template=custom_template_speed_fill_rate,width=450,height=170,)
 
 
 
@@ -290,10 +380,10 @@ fig_exchange_turnover.add_trace(go.Scatter(x=executed_orders.time_executed, y=ex
 fig_exchange_volume = go.Figure()
 fig_exchange_volume.add_trace(go.Scatter(x=executed_orders.time_executed, y=executed_orders['cumsum_volume'], mode='lines', line_color="#016657"))
 
-fig_executed_order.update_layout(title=format_title("Cumulated Traded Securities", "quantity of securities"), template=custom_template)
-fig_executed_order_qty.update_layout(title=format_title("Cumulated Orders", "quantity of orders"), template=custom_template)
-fig_exchange_turnover.update_layout(title=format_title("Cumulated Turnover", "fees in $"), template=custom_template)
-fig_exchange_volume.update_layout(title=format_title("Cumulated Executed Order Volume", "(fill_price * fill_size) in $"), template=custom_template)
+fig_executed_order.update_layout(title="Cumulated Traded Securities (quantity of securities)", template=custom_template_executed_order,width=450,height=170,)
+fig_executed_order_qty.update_layout(title="Cumulated Orders (quantity of orders)", template=custom_template_executed_order,width=450,height=170,)
+fig_exchange_turnover.update_layout(title="Cumulated Turnover (fees in $)", template=custom_template_executed_order,width=450,height=170,)
+fig_exchange_volume.update_layout(title="Cumulated Executed Order Volume (fill_price x fill_size in $)", template=custom_template_executed_order,width=450,height=170,)
 
 
 
@@ -407,8 +497,37 @@ app.layout = html.Div(
         ]),
     ]
 )
-
+get_treemap_fig().write_image("mt_1337_treemap.pdf", engine="kaleido")
+Ex_0_fig.write_image("mt_1337_timeseries.pdf", engine="kaleido")
+fig_executed_order_qty.write_image("mt_1337_order_qty.pdf", engine="kaleido")
+fig_executed_order.write_image("mt_1337_order.pdf", engine="kaleido")
+fig_exchange_volume.write_image("mt_1337_volume.pdf", engine="kaleido")
+fig_spreads.write_image("mt_1337_spreads.pdf", engine="kaleido")
+fig_exchange_turnover.write_image("mt_1337_turnover.pdf", engine="kaleido")
+fig_speed.write_image("mt_1337_speed.pdf", engine="kaleido")
+fig_fill_rate.write_image("mt_1337_fill_rate.pdf", engine="kaleido")
 app._favicon = ('icon.ico')
 
-# Run the app
-app.run_server(debug=False)
+# # Run the app
+# app.run_server(debug=False)
+
+# get last transacted trading volume
+last_volume = executed_orders['cumsum_volume'].iloc[-1]
+# get last quantity of executed orders
+last_qty = executed_orders['cumsum_order_qty'].iloc[-1]
+# get last quantity of executed securites
+last_qty_securities = executed_orders['cumsum_qty'].iloc[-1]
+# get last of order fees
+last_order_fee = executed_orders['cumsum_order_fee'].iloc[-1]
+
+# create txt with averages
+with open("./mt_" + str(1337) + "_averages.txt", "w") as text_file:
+    text_file.write("Market close transacted trading volume" + str(last_volume)+ "\n")
+    text_file.write("Market close Quantity of executed orders" + str(last_qty)+ "\n")
+    text_file.write("Market close quantity of executed securites" + str(last_qty_securities)+ "\n")
+    text_file.write("Market close market fees turnover" + str(last_order_fee)+ "\n")
+    text_file.write(ex_0_average_speed_of_fill+ "\n")
+    text_file.write(ex_0_average_fill_rate+ "\n")
+    text_file.write(ex_0_average_quoted_spreads+ "\n")
+    text_file.write(ex_0_average_effective_spreads+ "\n")
+    text_file.write(ex_0_average_realized_spreads + "\n")

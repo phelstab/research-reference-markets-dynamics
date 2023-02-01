@@ -13,8 +13,8 @@ from abides_core.utils import parse_logs_df, ns_date, str_to_ns, fmt_ts
 from abides_markets.configs import rmsc05MT
 
 config = rmsc05MT.build_config(
-    end_time="10:00:00",
-    seed=11111111,
+    end_time="16:00:00",
+    seed=1337,
 )
 
 config.keys()
