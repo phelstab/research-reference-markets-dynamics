@@ -73,7 +73,7 @@ multiprocess==0.70.13
 nest-asyncio==1.5.5
 networkx==2.6.3
 nodeenv==1.7.0
-numpy==1.20.3
+numpy==1.22.0
 nvidia-ml-py==11.495.46
 oauthlib==3.2.1
 opencensus==0.11.0
