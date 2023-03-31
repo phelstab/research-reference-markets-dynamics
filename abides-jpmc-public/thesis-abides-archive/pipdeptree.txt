@@ -21,7 +21,7 @@ py-spy==0.3.14
 pydantic==1.10.2
 pytest-cov==2.12.1
 ray==2.0.0
-redis==4.3.4
+redis==4.4.4
 scikit-image==0.19.3
 smart-open==6.2.0
 sphinx-autodoc-typehints==1.12.0
