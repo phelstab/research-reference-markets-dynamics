@@ -1,5 +1,9 @@
 # Exlude
 **/lambda/**
+.vscode/
+poster/
+References/
+Diagrams/
 
 abides-jpmc-public/lambda/*
 References/books/*

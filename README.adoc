@@ -1,7 +1,5 @@
 //### own attributes ###
-:ComponentName: ABIDES
-:SystemName: (agent-based interactive discrete event simulation) - experiments
-
+:ComponentName: Researching Financial Market Dynamics through Algorithmic Trading Agents
 
 //### Asciidoc attributes ####
 
@@ -18,7 +16,8 @@
 :nofooter:
 
 :imagesdir: 1images/
-:logo: image:hft.png[100,100] 
+:logo: image:hft.png[80,80] 
+:logo2: image:logo2.png[80,90] 
 
 
 :title-logo-image: {logo}
@@ -30,30 +29,26 @@
 
 // Do not make any changes here!
 
-= {ComponentName} / {SystemName} 
+= {ComponentName}
+Insights from Simulating Diverse Market Participants on Competing Exchanges as a Model for Observing Complex Latent Financial Market Dynamics in a High-Fidelity Equity Market Simulator
 
 
 {logo}
+{logo2}
 
 // Do not make any changes here!
 
 Document information
 [cols="1,1"]
 |===
-|Document Type{set:cellbgcolor:#b32929}
-|Concept{set:cellbgcolor:none}
-
 |Author{set:cellbgcolor:#b32929}
-|Paul H. {set:cellbgcolor:none}
-
-|Target groups{set:cellbgcolor:#b32929}
-|Financial Scientists{set:cellbgcolor:none}
+|phelstab {set:cellbgcolor:none}
 
 |Status{set:cellbgcolor:#b32929}
-|Work in progress{set:cellbgcolor:none}
+|wip{set:cellbgcolor:none}
 
 |Classification of Information{set:cellbgcolor:#b32929}
-|Open Source{set:cellbgcolor:none}
+|open source{set:cellbgcolor:none}
 
 |Location{set:cellbgcolor:#b32929}
 |GitHub{set:cellbgcolor:none}
@@ -68,6 +63,11 @@ Change History
 |Author{set:cellbgcolor:#b32929}
 |Change{set:cellbgcolor:#b32929}
 
+|1.01 {set:cellbgcolor:none}
+|27.07.2024
+|phelstab
+|cleanup in process
+
 |1.0 {set:cellbgcolor:none}
 |24.11.2022
 |phelstab
@@ -75,49 +75,22 @@ Change History
 |===
 
 
-References
-[cols="1,1,1"]
-|===
-|Title {set:cellbgcolor:#b32929}
-|DOI{set:cellbgcolor:#b32929}
-|Source {set:cellbgcolor:#b32929}
-
-|Explaining Agent-Based Financial Market Simulation{set:cellbgcolor:none}
-|10.48550/ARXIV.1909.11650
-|https://arxiv.org/abs/1909.11650
-
-|Towards Realistic Market Simulations: a Generative Adversarial Networks Approach
-|10.48550/ARXIV.2110.13287
-|https://arxiv.org/abs/2110.13287
-
-|ABIDES: Towards High-Fidelity Market Simulation for AI Research
-|10.48550/ARXIV.1904.12066
-|https://arxiv.org/abs/1904.12066
-
-|Explaining Agent-Based Financial Market Simulation
-|10.1145/3490354.3494433
-|https://doi.org/10.1145\%2F3490354.3494433
-
-|How to Evaluate Trading Strategies: Single Agent Market Replay or Multiple Agent Interactive Simulation?
-|10.48550/ARXIV.1906.12010
-|https://arxiv.org/abs/1906.12010
-|===
 
 
 
 == Introduction
-This bachelor thesis is divided into 4 main parts and explores the practice of observing
-reference market problems from a stock exchange perspective through “Discrete Event
-Multi-Agent Simulation” (DEMAS). The aim of this work was to fundamentally explain
-DEMAS and how complex reference market problems could be resolved through experiments. Introducing first, important terminology and background of DEMAS and a new
-”Agent-Based Interactive Discrete Event Simulator” (ABIDES). Thereafter, I want to
-examine complex reference market problems in the area of exchange market and market maker fee effects with the ABIDES framework. To address these reference market
-problems, we transfer and develop them as experiments in a customized environment
-and observe the experiments through advanced data analysis features. We conclude
-this thesis by introducing solution approaches to the previously observed experiments
-and providing stock exchanges or market makers an advanced version of ABIDES as a
-“strategic business navigation system” to challenge related reference market problems
-
+Our research explores the use of Agent-based Interactive Discrete Event Simulations
+(ABIDES) for the analysis of complex financial market scenarios and the identification of
+potential anomalies. The goal is to experimentally simulate financial market issues instead
+of observing them, for example, in controversial pilot programs on real reference markets.
+Our work encompasses various market fees and a synthetic competition between two
+exchanges, employing an inter-market spread arbitrage machine to enable price stability
+between the exchanges. In other experiments various market scenarios were simulated,
+and key metrics such as the impact on execution quality, generated turnaround, and market
+share of exchanges were analyzed under different marketplace fee scenarios. This
+approach allows the observation of anomalies related to spreads, execution speed, traded
+volumes, liquidity, probability of order execution, and the impact on agents' decision-
+making.
 
 == ABIDES
 === Installation
@@ -192,6 +165,54 @@ python rmsc05_mt.py #(maker taker market fees, single exchange)
 
 ```
 
+=== Architecture
+
+[#Figure1]
+.ABIDES with extended experiment structure overview
+image::ABIDES.png[]
+
+
+=== Known Bugs
+Pandas timedelta 64bit is returning wrong values on windows. 
+
+* Python Version 3.7.14 on both systems
+* Pandas Version 1.2.4 on both systems
+* Numpy Version 1.20.3 on both systems
+* Windows 11 vs WSL
+
+
+== Appendix
+
+=== References 
+
+[cols="1,1,1"]
+|===
+|Title {set:cellbgcolor:#b32929}
+|DOI{set:cellbgcolor:#b32929}
+|Source {set:cellbgcolor:#b32929}
+
+|Explaining Agent-Based Financial Market Simulation{set:cellbgcolor:none}
+|10.48550/ARXIV.1909.11650
+|https://arxiv.org/abs/1909.11650
+
+|Towards Realistic Market Simulations: a Generative Adversarial Networks Approach
+|10.48550/ARXIV.2110.13287
+|https://arxiv.org/abs/2110.13287
+
+|ABIDES: Towards High-Fidelity Market Simulation for AI Research
+|10.48550/ARXIV.1904.12066
+|https://arxiv.org/abs/1904.12066
+
+|Explaining Agent-Based Financial Market Simulation
+|10.1145/3490354.3494433
+|https://doi.org/10.1145\%2F3490354.3494433
+
+|How to Evaluate Trading Strategies: Single Agent Market Replay or Multiple Agent Interactive Simulation?
+|10.48550/ARXIV.1906.12010
+|https://arxiv.org/abs/1906.12010
+|===
+
+
 === Conventions
 
 The following conventions are used in the document and are specially marked:
@@ -209,88 +230,3 @@ The following conventions are used in the document and are specially marked:
 
 
 ** Todos are marked accordingly and usually highlighted in yellow. There should be no more todos in the final version.
-
-
-// ====
-// [NOTE]
-// Example
-// ====
-// [cols="1"]
-// |===
-// |Caution:{set:cellbgcolor:#b32929}
-
-// |Lorem Ipsum{set:cellbgcolor:none}
-// |===
-
-// [cols="1"]
-// |===
-// |@todo:{set:cellbgcolor:#b32929}
-
-// |Current representation will be inserted when final version is set.{set:cellbgcolor:none}
-// |===
-
-=== Architecture
-
-[#Figure1]
-.ABIDES Overview
-image::ABIDES.png[]
-
-
-=== Known Bugs
-Pandas timedelta 64bit is returning wrong values on windows. 
-
-* Python Version 3.7.14 on both systems
-* Pandas Version 1.2.4 on both systems
-* Numpy Version 1.20.3 on both systems
-* Windows 11 vs WSL
-
-[#Figure2]
-.pd timedelta bug
-image::bug.png[]
-
-
-// **#Example 1(#****#<here overview diagram as PlantUML>)****:#**
-
-// [plantuml, target=diagram-classes, format=png]   
-// ....
-// class BlockProcessor
-// class DiagramBlock
-// class DitaaBlock
-// class PlantUmlBlock
-
-// BlockProcessor <|-- DiagramBlock
-// DiagramBlock <|-- DitaaBlock
-// DiagramBlock <|-- PlantUmlBlock
-// ....
-
-
-
-// #The following form of representation can be used:#
-// [#Table1]
-// .Configuration parameters
-// [cols="1,1,1,1"]
-// |===
-// |Parameter{set:cellbgcolor:#b32929}
-// |Value rangeExpression{set:cellbgcolor:#b32929}
-// |Intend {set:cellbgcolor:#b32929}
-// |Example {set:cellbgcolor:#b32929}
-
-// |MinMaxParameter{set:cellbgcolor:none}
-// |-1 to 9999{set:cellbgcolor:none}
-// |Used in the [Component] for setting the lower / upper limit. The separator between minimum and maximum is the pipe symbol ‚\|‘{set:cellbgcolor:none}
-// |<MinMaxParameter>1\|999</MinMaxParameter>{set:cellbgcolor:none}
-
-// |{set:cellbgcolor:none}
-// |{set:cellbgcolor:none}
-// |{set:cellbgcolor:none}
-// |{set:cellbgcolor:none}
-// |===
-
-
-== Appendix
-
-**List of Figures**
-Figure 1: <<Figure1>>
-
-**List of tables**
-// Table 1: <<Table1>>
