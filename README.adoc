@@ -15,7 +15,7 @@
 :hardbreaks:
 :nofooter:
 
-:imagesdir: 1images/
+:imagesdir: images/
 :logo: image:hft.png[80,80] 
 :logo2: image:logo2.png[80,90] 
 
@@ -213,20 +213,10 @@ Pandas timedelta 64bit is returning wrong values on windows.
 |===
 
 
-=== Conventions
+=== Short Paper and Poster
 
-The following conventions are used in the document and are specially marked:
+==== Arbeitskreis Wirtschaftsinformatik 2024 (Landshut)
 
-[NOTE]
-*Note*
+link:publications/AKWI_2024_poster.pdf[Poster]
 
-[WARNING]
-*Warning*
-
-[IMPORTANT]
-*Important*
-
-#*@todo* - …#
-
-
-** Todos are marked accordingly and usually highlighted in yellow. There should be no more todos in the final version.
+link:publications/AKWI_2024_short_paper.pdf[Paper]
